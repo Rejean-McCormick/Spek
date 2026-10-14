@@ -45,3 +45,43 @@ UI = {
   'realizations':'Realizzazioni', 'layouts':'Layout', 'pdf':'PDF', 'latex':'Sorgente LaTeX', 'document':'Modello del documento', 'exports':'Formati',
  }
 }
+
+# Source explorer vocabulary is localized, but never implies certification.
+INSPECTOR_UI = {
+ 'fr': {
+  'open':'Explorer la source','origin':'Source sémantique','unit':'Unité','kind':'Type','epistemic':'Qualification','origin_type':'Origine du document',
+  'state':'État Kristal','commitment':'Engagement de l’état','unavailable':'Non fourni','proofs':'Preuves et références','proof_status':'Statut de la preuve','locator':'Localisation',
+  'realization':'Réalisation linguistique','provider':'Fournisseur','realization_status':'Statut','key':'Clé de réalisation','request':'Requête',
+  'runtime':'Ensemble d’exécution','words':'Mots et attributs','word':'Mot','lemma':'Lemme','pos':'Catégorie','features':'Attributs',
+  'links':'Liens linguistiques','not_supplied':'Non renseigné','token_note':'Segmentation de surface uniquement. Aucun attribut grammatical non fourni n’est déduit.',
+  'annotation':'Qualification des annotations','none':'Aucune référence rattachée','input':'Empreinte de la source','technical':'Référence technique',
+  'manual_fixture':'Exemple manuel','surface_only':'Surface uniquement','reviewed':'Révisé','qualified':'Qualifié',
+ },
+ 'en': {
+  'open':'Explore source','origin':'Semantic source','unit':'Unit','kind':'Type','epistemic':'Qualification','origin_type':'Document origin',
+  'state':'Kristal state','commitment':'State commitment','unavailable':'Not supplied','proofs':'Evidence and references','proof_status':'Evidence status','locator':'Locator',
+  'realization':'Language realization','provider':'Provider','realization_status':'Status','key':'Realization key','request':'Request',
+  'runtime':'Runtime set','words':'Words and attributes','word':'Word','lemma':'Lemma','pos':'Part of speech','features':'Features',
+  'links':'Linguistic links','not_supplied':'Not supplied','token_note':'Surface tokenization only. Missing grammatical attributes are not inferred.',
+  'annotation':'Annotation qualification','none':'No attached references','input':'Source fingerprint','technical':'Technical reference',
+  'manual_fixture':'Manual illustration','surface_only':'Surface only','reviewed':'Reviewed','qualified':'Qualified',
+ },
+ 'it': {
+  'open':'Esplora la fonte','origin':'Fonte semantica','unit':'Unità','kind':'Tipo','epistemic':'Qualificazione','origin_type':'Origine del documento',
+  'state':'Stato Kristal','commitment':'Impegno dello stato','unavailable':'Non fornito','proofs':'Prove e riferimenti','proof_status':'Stato della prova','locator':'Posizione',
+  'realization':'Realizzazione linguistica','provider':'Fornitore','realization_status':'Stato','key':'Chiave di realizzazione','request':'Richiesta',
+  'runtime':'Insieme di esecuzione','words':'Parole e attributi','word':'Parola','lemma':'Lemma','pos':'Parte del discorso','features':'Caratteristiche',
+  'links':'Collegamenti linguistici','not_supplied':'Non fornito','token_note':'Segmentazione superficiale soltanto. Gli attributi grammaticali mancanti non vengono dedotti.',
+  'annotation':'Qualificazione delle annotazioni','none':'Nessun riferimento collegato','input':'Impronta della fonte','technical':'Riferimento tecnico',
+  'manual_fixture':'Esempio manuale','surface_only':'Solo superficie','reviewed':'Revisionato','qualified':'Qualificato',
+ },
+}
+
+# v0.4 standalone connector and realization provenance vocabulary.
+INSPECTOR_UI['fr'].update(external_ref='Référence externe', open_graph='Voir dans le système source', channel='Voie linguistique', model='Modèle IA', generation='Génération', review='Révision humaine')
+INSPECTOR_UI['en'].update(external_ref='External reference', open_graph='View in source system', channel='Language channel', model='AI model', generation='Generation', review='Human review')
+INSPECTOR_UI['it'].update(external_ref='Riferimento esterno', open_graph='Apri nel sistema sorgente', channel='Canale linguistico', model='Modello IA', generation='Generazione', review='Revisione umana')
+
+INSPECTOR_UI['fr'].update(system='Système source', dataset='Jeu de données', policy='Politique de lecture', projection='Empreinte de projection')
+INSPECTOR_UI['en'].update(system='Source system', dataset='Dataset', policy='Reader policy', projection='Projection fingerprint')
+INSPECTOR_UI['it'].update(system='Sistema sorgente', dataset='Dataset', policy='Politica di lettura', projection='Impronta della proiezione')

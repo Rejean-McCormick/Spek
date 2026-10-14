@@ -1,3 +1,5 @@
+> **Spek v0.4:** Spek is autonomous; all external knowledge integrations are optional. See [Standalone and connectors](STANDALONE_AND_CONNECTORS.md) and [Language channels](LANGUAGE_CHANNELS.md).
+
 # Architecture and roadmap
 
 ## Implemented now

@@ -11,6 +11,7 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlsplit
 from typing import Any
 
 LANGS = ("fr", "en", "it")
@@ -113,6 +114,15 @@ def compile_inputs(source: dict, realizations: dict, layout_defs: list[dict], *,
         safe_id(item.get('realization_key'), f'unit {uid}.realization_key')
         expect(item.get('epistemic_status') in {'design_proposal', 'hypothesis', 'observation', 'method', 'limitation', 'test_result'}, f'Unknown status in {uid}')
         expect(isinstance(item.get('evidence_refs', []), list), f'Invalid evidence_refs in {uid}')
+        for extra in ('external_ref','navigation_url'):
+            if extra in item:
+                expect(isinstance(item[extra],str) and len(item[extra]) <= 2048, f'Invalid {extra} for {uid}')
+                if extra == 'navigation_url':
+                    parsed=urlsplit(item[extra])
+                    expect((parsed.scheme == 'https' or (parsed.scheme == 'http' and
+                        parsed.hostname in {'localhost','127.0.0.1','::1'})) and parsed.hostname
+                        and not parsed.username and not parsed.password and not parsed.fragment,
+                        f'Unsafe navigation URL for {uid}')
         units[uid] = item
     for item in source['evidence']:
         expect(isinstance(item, dict), 'Evidence must be object')
@@ -121,6 +131,15 @@ def compile_inputs(source: dict, realizations: dict, layout_defs: list[dict], *,
         safe_id(item.get('realization_key'), f'evidence {uid}.realization_key')
         expect(item.get('status') in {'illustrative_fixture', 'local_artifact', 'external_unverified', 'independently_verified'}, f'Evidence status missing at {uid}')
         expect(isinstance(item.get('locator'), str) and bool(item['locator'].strip()), f'Invalid locator for {uid}')
+        for extra in ('external_ref','navigation_url'):
+            if extra in item:
+                expect(isinstance(item[extra],str) and len(item[extra]) <= 2048, f'Invalid {extra} for {uid}')
+                if extra == 'navigation_url':
+                    parsed=urlsplit(item[extra])
+                    expect((parsed.scheme == 'https' or (parsed.scheme == 'http' and
+                        parsed.hostname in {'localhost','127.0.0.1','::1'})) and parsed.hostname
+                        and not parsed.username and not parsed.password and not parsed.fragment,
+                        f'Unsafe navigation URL for {uid}')
         evidence[uid] = item
     for uid, unit in units.items():
         for e in unit.get('evidence_refs', []):
@@ -183,11 +202,66 @@ def compile_inputs(source: dict, realizations: dict, layout_defs: list[dict], *,
             expect(isinstance(txt, str) and 0 < len(txt.strip()) <= 5000, f'Empty/oversized realization {key}/{lang}')
             expect(node.get('status') in {'fixture', 'reviewed', 'qualified'}, f'Invalid realization status {key}/{lang}')
             expect(isinstance(node.get('provider'), str) and bool(node['provider']), f'Missing provider {key}/{lang}')
+            channel = node.get('channel', 'legacy')
+            expect(channel in {'legacy', 'semantik_architect', 'ai_preconstructed'},
+                   f'Unknown language channel {key}/{lang}')
+            if channel == 'ai_preconstructed':
+                expect(node['provider'] == 'ai_preconstructed', f'AI provider mismatch {key}/{lang}')
+                expect(node['status'] != 'qualified', f'AI sentences cannot claim GF qualification {key}/{lang}')
+                expect(not any(node.get(x) for x in ('runtime_set_id','request_id','gf_function')),
+                       f'AI sentence must not claim SemantiK runtime {key}/{lang}')
+                expect(all(isinstance(node.get(x),str) and bool(node[x]) for x in ('model_id','generation_ref'))
+                       and SHA256.fullmatch(str(node.get('prompt_sha256',''))) is not None,
+                       f'AI generation provenance required {key}/{lang}')
+                expect(all(not tok.get('gf_function') and tok.get('annotation_status') != 'qualified'
+                           for tok in node.get('tokens',[])),
+                       f'AI phrase cannot claim GF lexical functions {key}/{lang}')
+                review = node.get('human_review')
+                expect(isinstance(review,dict) and review.get('status') in {'pending','approved'},
+                       f'Human review required {key}/{lang}')
+                if node['status'] == 'reviewed':
+                    expect(review['status'] == 'approved' and isinstance(review.get('review_ref'),str)
+                           and bool(review['review_ref'].strip()), f'Unreviewed AI sentence {key}/{lang}')
+            elif channel == 'semantik_architect':
+                expect(node['status'] != 'reviewed' or bool(node.get('request_id')),
+                       f'SemantiK request identity required {key}/{lang}')
+                expect(not any(node.get(x) for x in ('model_id','generation_ref','prompt_sha256','human_review')),
+                       f'Mixed SemantiK/AI provenance {key}/{lang}')
             if node['status'] == 'qualified':
-                expect(isinstance(node.get('runtime_set_id'), str) and bool(node['runtime_set_id']), f'Missing qualified runtime set {key}/{lang}')
+                expect(channel != 'ai_preconstructed' and isinstance(node.get('runtime_set_id'),str)
+                       and bool(node['runtime_set_id']), f'Missing qualified runtime set {key}/{lang}')
+            tokens = node.get('tokens', [])
+            expect(isinstance(tokens, list) and len(tokens) <= 1000, f'Invalid token annotations {key}/{lang}')
+            # Only exact surface-token spans are accepted. Unknown linguistic properties
+            # are left absent rather than inferred from spelling.
+            surface_spans = {(hit.start(), hit.end()): hit.group()
+                for hit in re.finditer(r"\w+(?:[’'-]\w+)*|[^\w\s]", txt, re.UNICODE)}
+            seen_spans = set()
+            for tok in tokens:
+                expect(isinstance(tok, dict), f'Invalid token {key}/{lang}')
+                no_extra_keys(tok, {'start','end','surface','lemma','pos','features',
+                                   'lexeme_ref','semantic_ref','gf_function','annotation_status'}, 'token')
+                a,b = tok.get('start'),tok.get('end')
+                expect(type(a) is int and type(b) is int and (a,b) in surface_spans
+                       and (a,b) not in seen_spans and tok.get('surface') == surface_spans[(a,b)],
+                       f'Token span mismatch or duplicate {key}/{lang}')
+                seen_spans.add((a,b))
+                expect(tok.get('annotation_status') in {'manual_fixture','reviewed','qualified'},
+                       f'Token annotation status missing {key}/{lang}')
+                for k in ('lemma','pos','lexeme_ref','semantic_ref','gf_function'):
+                    expect(k not in tok or (isinstance(tok[k],str) and len(tok[k]) <= 256),
+                           f'Invalid token attribute {k} in {key}/{lang}')
+                features = tok.get('features',{})
+                expect(isinstance(features,dict) and len(features)<=20
+                       and all(isinstance(k,str) and isinstance(v,str)
+                               and len(k)<=80 and len(v)<=160 for k,v in features.items()),
+                       f'Invalid token morphology {key}/{lang}')
+                if tok['annotation_status'] == 'qualified':
+                    expect(node['status'] == 'qualified',
+                           f'Qualified lexical annotation requires qualified realization {key}/{lang}')
     src = source['source']
     origin = src.get('origin')
-    expect(origin in {'illustrative_fixture', 'kristal_v9'}, 'Invalid source origin')
+    expect(origin in {'illustrative_fixture', 'kristal_v9', 'external_projection'}, 'Invalid source origin')
     source_verified = False
     if origin == 'kristal_v9':
         expect(state_snapshot is not None, 'A v9 state snapshot is required to check referenced state identity')
@@ -201,10 +275,15 @@ def compile_inputs(source: dict, realizations: dict, layout_defs: list[dict], *,
         expect(bool(ids) and set(ids) <= {m.get('artifact_id') for m in state_snapshot.get('members', [])}, 'Artifact refs are not in pinned snapshot')
         # Even this is not cryptographic JCS verification. The state snapshot is treated as supplied metadata.
         source_verified = True
-    demo = origin == 'illustrative_fixture' or any(entries[k][l]['status'] != 'qualified' for k in used_keys for l in languages)
+    demo = origin != 'kristal_v9' or any(
+        entries[k][l]['status'] != 'qualified' and not (
+            entries[k][l].get('channel') == 'ai_preconstructed' and
+            entries[k][l]['status'] == 'reviewed' and
+            entries[k][l].get('human_review', {}).get('status') == 'approved')
+        for k in used_keys for l in languages)
     if production:
         expect(origin == 'kristal_v9' and source_verified, 'Publishing requires a pinned v9 source')
-        expect(not demo, 'Publishing refuses fixtures or unqualified realizations')
+        expect(not demo, 'Publishing refuses illustrative or unreviewed realizations')
         expect(src.get('scientific_review') == 'approved', 'Scientific review approval required')
         expect(src.get('disclosure') == 'approved', 'Disclosure approval required')
         expect(src.get('language_review') == {l: 'approved' for l in languages}, 'Independent language review required for every language')

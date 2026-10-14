@@ -37,7 +37,9 @@ class RenderFidelity(unittest.TestCase):
                         self.assertIn(f'data-unit-id="{item.id}"',html)
                         self.assertIn(f'data-kind="{item.kind}"',html)
                         self.assertIn(f'data-status="{item.status}"',html)
-                        self.assertIn(item.trace(),html)
+                        self.assertIn(f'data-source-id="{item.id}"',html)
+                        self.assertIn(f'<code>{item.id}</code>',html)
+                        self.assertNotIn('<span class="ref">',html)
                         self.assertIn(item.trace().replace('_',r'\_'),tex)
                         self.assertEqual(item.evidence_refs,tuple(self.model.item(item.id,lang).get('evidence_refs',[])))
                         self.assertEqual(item.text,self.model.item(item.id,lang)['text'])
@@ -63,7 +65,7 @@ class RenderFidelity(unittest.TestCase):
 
     def test_projected_document_contains_16_units_and_2_evidence(self):
         data=project_document(self.model,'fr').to_dict()
-        self.assertEqual(data['format'],'spek.document/0.2')
+        self.assertEqual(data['format'],'spek.document/0.4')
         ids=[item['id'] for sec in data['sections'] for items in sec['slots'].values() for item in items]
         self.assertEqual(len(set(ids)),18)
         self.assertEqual(len(data['sections']),3)

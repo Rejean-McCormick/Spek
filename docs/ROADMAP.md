@@ -38,3 +38,13 @@ This is a proposal, not a promise of delivery.
 ## 1.0 consideration
 
 Independent scientific validation and upstream governance decisions are prerequisites; passing tests alone does not make the system production-ready.
+
+## After 0.3
+
+- Integrate qualified SemantiK token / GF-feature mappings with explicit provenance and review.
+- Evaluate Source Explorer readability and accessibility on real, permissioned Kristal states.
+
+## v0.4 implementation status
+
+- Delivered: offline Konstellation ResultSet importer, generic exchange adapter, explicit opt-in Konstellation query capture, configurable outbound deep links, AI-preconstructed phrase importer, distinct channel provenance, and Source Explorer source-system references.
+- Not delivered: Konstellation-side navigation button, live bridge against deployed servers, generalized Kristal canonical cryptographic verification, LLM generation, native SemantiK Architect runtime execution or automatic publication.

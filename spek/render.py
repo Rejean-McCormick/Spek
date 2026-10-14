@@ -7,6 +7,7 @@ from xml.sax.saxutils import escape as xml_escape
 from .core import Compiled, ValidationError, escape_tex
 from .document import SpekDocument, DocumentItem, DocumentSection, project_document
 from .locale import UI
+from .inspector import card_inspector
 
 CSS = '''
 :root{--ink:#1b2937;--muted:#5e7080;--paper:#f6f7f9;--line:#d9e0e7;--accent:#215d8e;--soft:#edf3f7;--amber:#95600b}
@@ -27,6 +28,41 @@ p{margin:0 0 10px}.text-value{font-size:1.02rem}.grid{display:grid;grid-template
 footer{border-top:1px solid var(--line);padding-top:25px;margin-top:50px;color:var(--muted);font-size:.78rem}.foot-id{font-family:ui-monospace,monospace;overflow-wrap:anywhere}.badge{color:var(--amber);font-size:.76rem;font-weight:750;margin-bottom:9px}
 @media(max-width:670px){.wrapper{padding:15px 14px 50px}.content,.section-head{padding:17px}.grid,.compare{grid-template-columns:1fr}.compare>div+div{border-left:none;border-top:1px solid var(--line)}.path{flex-direction:column}.connector{transform:rotate(90deg)}.toc a{display:block;margin:7px 0}}
 .unit+.unit{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}.exports{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.exports a{font-size:.85rem;display:inline-block;color:var(--accent);padding:7px 11px;border:1px solid var(--line);border-radius:6px;background:white;text-decoration:none} .highlight .ref{padding-top:4px} .tile .block-label{margin-bottom:8px}
+
+.source-navigation{display:inline-flex;padding:7px 10px;margin:6px 0 14px;color:#125581;border:1px solid #b6cfe4;border-radius:5px;font-size:.8rem;font-weight:700;text-decoration:none}.source-navigation:hover{background:#e3f1f9}
+/* Per-card offline Source Explorer: HTML details/summary works without JS. */
+.source-inspector{border-top:1px solid var(--line);margin-top:14px;padding-top:10px}
+.source-trigger{cursor:pointer;color:var(--accent);font-weight:750;font-size:.82rem;list-style:none;display:flex;align-items:center;gap:8px;padding:7px 6px;border-radius:6px;max-width:max-content}
+.source-trigger::-webkit-details-marker{display:none}
+.source-trigger:hover{background:#dcebf5}.source-trigger:focus-visible{outline:3px solid #236a9e;outline-offset:3px}
+.source-trigger-caret{margin-left:5px;transition:transform .15s}.source-inspector[open] .source-trigger-caret{transform:rotate(180deg)}
+.source-panel{background:#f8fafc;border:1px solid var(--line);border-radius:8px;margin-top:10px;padding:16px;min-width:0}
+.source-record+.source-record{border-top:2px solid var(--line);margin-top:18px;padding-top:18px}
+.source-record h4{font-size:.96rem;margin:0 0 15px}.source-record h4 code{display:inline-block;overflow-wrap:anywhere;font-weight:500;font-size:.77rem;background:#e7eef5;padding:3px 6px;border-radius:3px}
+.source-record h5{font-size:.73rem;text-transform:uppercase;letter-spacing:.07em;color:#395870;margin:16px 0 8px}
+.source-attributes,.evidence-entry dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 16px;margin:0}
+.source-attribute{min-width:0;padding:6px 0;border-bottom:1px solid #e7edf2}.source-attribute dt{font-size:.72rem;color:#546779;font-weight:700}.source-attribute dd{margin:3px 0 0;overflow-wrap:anywhere;font-size:.83rem}
+.not-provided{color:#82909d;font-size:.77rem}.source-note{font-size:.8rem;color:var(--muted);margin-bottom:10px}
+.token-scroll{overflow-x:auto;max-width:100%;border:1px solid var(--line);border-radius:6px;background:white}
+.token-scroll:focus-visible{outline:2px solid var(--accent)}
+.token-table{border-collapse:collapse;width:100%;font-size:.77rem;min-width:550px}
+.token-table th,.token-table td{border-bottom:1px solid #e4eaf0;text-align:left;padding:8px;vertical-align:top;overflow-wrap:anywhere}
+.token-table thead th{background:#eaf1f6;color:#294860;font-weight:750}
+.token-table tbody th{font-weight:700;color:var(--ink)}.token-table tbody tr:last-child td,.token-table tbody tr:last-child th{border-bottom:0}
+.evidence-entry{background:white;border:1px solid var(--line);padding:12px 14px;border-radius:6px;margin:8px 0}
+.evidence-entry strong{font-size:.82rem}.evidence-entry p{font-size:.83rem;margin-top:5px}
+.source-fingerprint{margin-top:15px;border-top:1px solid var(--line);padding-top:10px;font-size:.74rem;overflow-wrap:anywhere}
+.source-fingerprint code{display:block;font-size:.69rem;margin-top:3px}
+@media(max-width:670px){.source-panel{padding:11px}.source-attributes,.evidence-entry dl{grid-template-columns:1fr}}
+.source-modal{width:min(870px,calc(100vw - 24px));max-width:870px;max-height:min(88vh,900px);padding:0;overflow:auto;border:1px solid #c4d4e1;border-radius:13px;box-shadow:0 18px 80px #091d3480;background:#f8fafc;color:var(--ink)}
+.source-modal::backdrop{background:rgba(9,29,52,.58)}
+.source-modal-header{position:sticky;top:0;z-index:1;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;background:white;border-bottom:1px solid var(--line)}
+.source-modal-header h2{font-size:1.1rem;margin:0}.source-modal-close{border:1px solid var(--line);border-radius:7px;background:white;color:var(--accent);padding:7px 12px;cursor:pointer;font:inherit;font-size:.88rem}
+.source-modal-close:focus-visible{outline:3px solid var(--accent)}
+.source-modal-content{padding:14px 20px 25px}.source-modal .source-panel{border:0;background:transparent;padding:0;margin:0}
+.source-modal .token-table{min-width:670px}.source-modal .source-attributes{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:670px){.source-modal-content{padding:10px}.source-modal-header{padding:10px 13px}.source-modal .source-attributes{grid-template-columns:1fr}}
+
 @media print{body{background:white}.wrapper{padding:0}.panel{box-shadow:none;break-inside:avoid}nav{display:none}footer{break-before:avoid}}
 '''
 
@@ -36,16 +72,17 @@ def _unit_html(item: DocumentItem) -> str:
     return (f'<div class="unit" data-unit-id="{a(item.id)}" data-kind="{a(item.kind)}" '
             f'data-status="{a(item.status)}" data-evidence-refs="{a(refs)}">'
             f'<p class="text-value">{html.escape(item.text)}</p>'
-            f'<span class="ref">{html.escape(item.trace())}</span></div>')
+            '</div>')
 
 
-def _slot_html(section: DocumentSection, slot: str, lang: str, css_class='tile') -> str:
+def _slot_html(section: DocumentSection, slot: str, doc: SpekDocument, css_class='tile') -> str:
     items=section.items(slot)
     if not items:
         return ''
     return (f'<div class="{css_class}" data-slot="{html.escape(slot)}">'
-            f'<span class="block-label">{html.escape(UI[lang][slot])}</span>'
-            + ''.join(_unit_html(item) for item in items) + '</div>')
+            f'<span class="block-label">{html.escape(UI[doc.language][slot])}</span>'
+            + ''.join(_unit_html(item) for item in items)
+            + card_inspector(items, doc, slot=slot) + '</div>')
 
 
 def section_html(doc: SpekDocument, sec: DocumentSection) -> str:
@@ -54,20 +91,20 @@ def section_html(doc: SpekDocument, sec: DocumentSection) -> str:
          f'<div class="section-head"><span class="label">{html.escape(t[l])} · {html.escape(l)} v{html.escape(sec.layout_version)}</span>'
          f'<h2>{html.escape(sec.heading)}</h2></div><div class="content">')
     if l=='result-card':
-        body=(_slot_html(sec,'claim',doc.language,'highlight')
-              +'<div class="grid">'+_slot_html(sec,'conditions',doc.language)+_slot_html(sec,'evidence',doc.language)+'</div>'
-              +'<div class="grid">'+_slot_html(sec,'uncertainty',doc.language)+_slot_html(sec,'implications',doc.language)+'</div>')
+        body=(_slot_html(sec,'claim',doc,'highlight')
+              +'<div class="grid">'+_slot_html(sec,'conditions',doc)+_slot_html(sec,'evidence',doc)+'</div>'
+              +'<div class="grid">'+_slot_html(sec,'uncertainty',doc)+_slot_html(sec,'implications',doc)+'</div>')
     elif l=='argument-map':
-        body=(_slot_html(sec,'thesis',doc.language,'highlight')
-              +'<div class="grid">'+_slot_html(sec,'premises',doc.language)+'</div><div class="path">'
-              +_slot_html(sec,'inference',doc.language)+'<span class="connector" aria-hidden="true">→</span>'
-              +_slot_html(sec,'conclusion',doc.language)+'</div>'
-              +'<div class="grid">'+_slot_html(sec,'objection',doc.language)+'</div>')
+        body=(_slot_html(sec,'thesis',doc,'highlight')
+              +'<div class="grid">'+_slot_html(sec,'premises',doc)+'</div><div class="path">'
+              +_slot_html(sec,'inference',doc)+'<span class="connector" aria-hidden="true">→</span>'
+              +_slot_html(sec,'conclusion',doc)+'</div>'
+              +'<div class="grid">'+_slot_html(sec,'objection',doc)+'</div>')
     elif l=='comparison':
-        body=(_slot_html(sec,'topic',doc.language,'highlight')
-              +'<div class="grid">'+_slot_html(sec,'criterion',doc.language)+'</div><div class="compare">'
-              +'<div>'+_slot_html(sec,'approach_a',doc.language)+'</div><div>'+_slot_html(sec,'approach_b',doc.language)+'</div></div>'
-              +'<div class="grid">'+_slot_html(sec,'synthesis',doc.language)+_slot_html(sec,'limitations',doc.language)+'</div>')
+        body=(_slot_html(sec,'topic',doc,'highlight')
+              +'<div class="grid">'+_slot_html(sec,'criterion',doc)+'</div><div class="compare">'
+              +'<div>'+_slot_html(sec,'approach_a',doc)+'</div><div>'+_slot_html(sec,'approach_b',doc)+'</div></div>'
+              +'<div class="grid">'+_slot_html(sec,'synthesis',doc)+_slot_html(sec,'limitations',doc)+'</div>')
     else:
         raise ValidationError('Unknown renderer: '+l)
     return top+body+'</div></section>'
@@ -85,14 +122,45 @@ def article_html(m: Compiled, lang: str, formats=('html','pdf','tex')) -> str:
     if 'tex' in formats:links.append(f'<a href="article.tex" download>{html.escape(t["latex"])}</a>')
     links.append(f'<a href="document.json" download>{html.escape(t["document"])}</a>')
     exports=f'<div class="exports" aria-label="{html.escape(t["exports"])}">'+''.join(links)+'</div>'
+    modal = (f'<dialog class="source-modal" id="spek-source-dialog" aria-labelledby="spek-source-title">'
+             f'<header class="source-modal-header"><h2 id="spek-source-title"></h2>'
+             f'<button type="button" class="source-modal-close">{html.escape({"fr":"Fermer","en":"Close","it":"Chiudi"}[lang])}</button>'
+             f'</header><div id="spek-source-content" class="source-modal-content"></div></dialog>')
+    # Progressive enhancement: no-JS readers still have expandable native details.
+    modal_script = """<script>
+(() => {
+  const dialog = document.getElementById('spek-source-dialog');
+  const content = document.getElementById('spek-source-content');
+  const title = document.getElementById('spek-source-title');
+  const close = dialog.querySelector('.source-modal-close');
+  let trigger = null;
+  document.addEventListener('click', event => {
+    const summary = event.target.closest('summary.source-trigger');
+    if (!summary || !dialog.showModal) return;
+    event.preventDefault();
+    const details = summary.closest('details.source-inspector');
+    if (!details) return;
+    const panel = details.querySelector(':scope > .source-panel');
+    const card = details.closest('[data-slot]');
+    if (!panel || !card) return;
+    trigger = summary;
+    title.textContent = card.querySelector('.block-label')?.textContent || summary.textContent;
+    content.replaceChildren(panel.cloneNode(true));
+    dialog.showModal();
+    close.focus();
+  });
+  close.addEventListener('click', () => dialog.close());
+  dialog.addEventListener('close', () => { content.replaceChildren(); trigger?.focus(); });
+})();
+</script>"""
     return f'''<!doctype html><html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{html.escape(doc.title)}</title><meta name="description" content="{html.escape(doc.abstract, quote=True)}"><style>{CSS}</style></head>
-<body><main class="wrapper"><nav><span>KRISTAL / SPEK · 0.2</span><div aria-label="{html.escape(t['lang'])}">{langs}</div></nav>
+<body><main class="wrapper"><nav><span>SPEK · 0.4</span><div aria-label="{html.escape(t['lang'])}">{langs}</div></nav>
 <header><span class="eyebrow">{html.escape(t['eyebrow'])}</span><h1>{html.escape(doc.title)}</h1><p class="subtitle">{html.escape(doc.subtitle)}</p>{warn}{exports}</header>
 <div class="abstract"><h2>{html.escape(t['abstract'])}</h2><p>{html.escape(doc.abstract)}</p></div>
 <div class="toc"><strong>{html.escape(t['contents'])}</strong>{toc}</div>
 {sections}
 <footer><strong>{html.escape(t['trace'])}</strong><p>{html.escape(t['source_status'])}: {html.escape(status)}. {html.escape(t['evidence_notice'])}</p><p class="foot-id">{html.escape(t['source'])}: {html.escape(doc.source_sha256)} · {html.escape(t['realizations'])}: {html.escape(doc.realizations_sha256)} · {html.escape(t['layouts'])}: {html.escape(doc.layouts_sha256)}</p></footer>
-</main></body></html>'''
+</main>{modal}{modal_script}</body></html>'''
 
 
 def landing_html(m: Compiled) -> str:
@@ -103,7 +171,7 @@ def landing_html(m: Compiled) -> str:
             f'<meta name="viewport" content="width=device-width, initial-scale=1">'
             f'<title>Spek — Structured multilingual publications</title></head>'
             f'<body style="font-family:system-ui;background:#f6f7f9;color:#1b2937;max-width:780px;margin:10vh auto;padding:30px">'
-            f'<p style="letter-spacing:.18em;color:#215d8e">KRISTAL / SPEK · 0.2</p>'
+            f'<p style="letter-spacing:.18em;color:#215d8e">SPEK · 0.4</p>'
             f'<h1>One meaning. Many structured expressions.</h1>'
             f'<p>Multilingual editorial prototype. Demonstration content only; not scientifically validated.</p>'
             f'<nav aria-label="Select article language">{choices}</nav></body></html>')
@@ -263,7 +331,7 @@ def article_pdf(m: Compiled, lang: str, path: Path) -> None:
     story.append(KeepTogether([HRFlowable(width='100%',thickness=.7,color=line)]+meta))
     def page(canvas,pdf_doc):
         canvas.saveState();canvas.setFont('SpekUnicode',7);canvas.setFillColor(muted)
-        canvas.drawString(43,27,'KRISTAL / SPEK · 0.2')
+        canvas.drawString(43,27,'SPEK · 0.4')
         canvas.drawRightString(A4[0]-43,27,str(pdf_doc.page))
         canvas.restoreState()
     pdf=SimpleDocTemplate(str(path),pagesize=A4,rightMargin=43,leftMargin=43,

@@ -32,3 +32,13 @@ jobs:
         with:
           name: illustrative-trilingual-preview-${{ matrix.os }}
           path: preview-site/
+      - name: Test standalone Konstellation export adapter (no network)
+        run: python -m spek bridge-import --adapter konstellation --input examples/bridge/konstellation-resultset.json --template examples/article.json --mapping examples/bridge/konstellation-mapping.json --out bridge-article.json
+      - name: Test second independent source adapter
+        run: python -m spek bridge-import --adapter exchange --input examples/bridge/external-system-exchange.json --template examples/article.json --mapping examples/bridge/external-system-mapping.json --out external-article.json
+      - name: Test preconstructed AI import without SemantiK
+        run: python -m spek import-ai --input examples/bridge/ai-preconstructed-example.json --base examples/bridge/realizations-without-example-claim.json --out ai-realizations.json
+      - name: Compile bridged publication with AI fixture
+        run: python -m spek build --source external-article.json --realizations ai-realizations.json --out preview-external --formats html,tex
+      - name: Verify bridged publication
+        run: python -m spek verify-site preview-external

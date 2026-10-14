@@ -5,11 +5,17 @@
 - [[Core Concepts]]
 - [[FAQ]]
 
+**Interoperability**
+- [[Standalone Architecture]]
+- [[Source Connectors]]
+- [[Language Channels]]
+
 **Design**
 - [[Layout Catalog]]
 - [[Layout Authoring]]
 - [[Article Source Format]]
 - [[Realizations and Languages]]
+- [[Source Explorer]]
 
 **Operations**
 - [[Local Build and Verification]]

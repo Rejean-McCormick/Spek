@@ -30,3 +30,7 @@ A repository must **not** be made public just to test a demonstration. Test loca
 **Do not** commit private Kristal canonical blobs or unapproved evidence into public repositories.
 
 GitHub Docs: [GitHub Pages custom workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
+
+## v0.4 operator note
+
+Spek has **no default upstream GitHub repository**. The downloadable Git Bundle is a self-contained local history. Restore it with `git clone Spek_Repository_0.4.0.bundle Spek`; set a new remote with `git remote set-url origin https://github.com/OWNER/Spek.git` **after** creating and authorizing your own GitHub repository. Wiki synchronization is a separate, explicit operation. Do not push source-system exports, bearer tokens, query files or publication drafts into a public repository without review.

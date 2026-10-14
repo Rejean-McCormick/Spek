@@ -10,3 +10,13 @@ preview-site/
 published-site/
 *.log
 .DS_Store
+
+# Generated bridge previews (operator-local only)
+bridge-article.json
+external-article.json
+ai-realizations.json
+resultset.json
+query.json
+dist-bridge/
+dist-external/
+preview-external/

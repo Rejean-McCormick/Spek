@@ -11,6 +11,8 @@ from pathlib import Path
 from .core import LANGS, ValidationError, compile_inputs, digest, read_json
 from .render import article_html, article_tex, article_pdf, landing_html
 from .document import project_document
+from .bridge import bridge_import, fetch_konstellation
+from .ai_phrases import import_ai
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -175,6 +177,21 @@ def main(argv=None):
     b.add_argument('--production',action='store_true',help='Block fixtures & unreviewed languages, not an authorization to publish')
     v=sub.add_parser('verify-site');v.add_argument('site');v.add_argument('--require-production',action='store_true')
     i=sub.add_parser('import-semantik');i.add_argument('--input',required=True);i.add_argument('--mapping',required=True);i.add_argument('--out',required=True)
+    bridge=sub.add_parser('bridge-import', help='Read-only import of a pinned external selection')
+    bridge.add_argument('--adapter',required=True,choices=('konstellation','exchange'))
+    bridge.add_argument('--input',required=True,help='Exported Konstellation ResultSet or Spek exchange JSON')
+    bridge.add_argument('--template',required=True,help='Locally approved Spek article template')
+    bridge.add_argument('--mapping',required=True,help='Explicit binding map with payload digests')
+    bridge.add_argument('--out',required=True)
+    kfetch=sub.add_parser('bridge-fetch-konstellation',help='Explicit opt-in POST /api/query snapshot capture')
+    kfetch.add_argument('--base-url',required=True)
+    kfetch.add_argument('--query-file',required=True)
+    kfetch.add_argument('--token-env',help='Name of environment variable holding bearer token')
+    kfetch.add_argument('--out',required=True)
+    ai=sub.add_parser('import-ai' ,help='Import preconstructed AI phrases (no SemantiK call)')
+    ai.add_argument('--input',required=True)
+    ai.add_argument('--base',help='Existing realization bundle to extend (no overwrite)')
+    ai.add_argument('--out',required=True)
     args=parser.parse_args(argv)
     try:
         if args.command=='check':
@@ -182,6 +199,21 @@ def main(argv=None):
         elif args.command=='build': build(args)
         elif args.command=='verify-site':verify_site(args.site,require_production=args.require_production)
         elif args.command=='import-semantik':import_semantik(args)
+        elif args.command=='bridge-import':
+            value=bridge_import(args.adapter,read_json(Path(args.input)),read_json(Path(args.template)),read_json(Path(args.mapping)))
+            write(Path(args.out),json.dumps(value,ensure_ascii=False,indent=2,sort_keys=True)+'\n')
+            print(f'BRIDGED: {args.adapter} · {len(value["units"])} semantic units · local preview only · {args.out}')
+        elif args.command=='bridge-fetch-konstellation':
+            token=os.environ.get(args.token_env,'') if args.token_env else ''
+            if args.token_env and not token:
+                raise ValidationError('Requested bearer token environment variable is empty')
+            val=fetch_konstellation(args.base_url,read_json(Path(args.query_file)),token=token)
+            write(Path(args.out),json.dumps(val,ensure_ascii=False,sort_keys=True,indent=2)+'\n')
+            print(f'CAPTURED: complete Konstellation ResultSet · {args.out}')
+        elif args.command=='import-ai':
+            val=import_ai(read_json(Path(args.input)),read_json(Path(args.base)) if args.base else None)
+            write(Path(args.out),json.dumps(val,ensure_ascii=False,indent=2,sort_keys=True)+'\n')
+            print(f'AI IMPORTED: {len(val["entries"])} keys · preconstructed only · {args.out}')
         return 0
     except (ValidationError,OSError,ValueError,KeyError) as e:
         print('BLOCKED: '+str(e),file=sys.stderr);return 2

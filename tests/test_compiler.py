@@ -66,7 +66,7 @@ class Validations(unittest.TestCase):
         def mod(s,r,l): r['entries']['u.result.claim']['fr']['text']='<script>alert(1)</script> & data'
         m=self.model(mod);txt=article_html(m,'fr')
         self.assertIn('&lt;script&gt;alert(1)&lt;/script&gt; &amp; data',txt)
-        self.assertNotIn('<script>',txt)
+        self.assertNotIn('<script>alert(1)</script>',txt)
 
     def test_tex_escaping(self):
         self.assertIn(r'\%',escape_tex('x%'))

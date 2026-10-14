@@ -16,7 +16,7 @@ Spek is an experimental, local-first semantic publishing engine. It binds **type
 - [[Local Build and Verification]] — Inspect formats and manifest hashes.
 - [[GitHub Publishing]] — Publish reviewed, precompiled assets only.
 - [[SemantiK Integration]] — Import historical fixtures safely.
-- [[Rendering and Semantic Fidelity]] — The 0.2 shared document model, tracing, pagination and fonts.
+- [[Rendering and Semantic Fidelity]] — The shared document model, tracing, pagination and fonts.
 
 ## Trust and qualification
 
@@ -24,4 +24,12 @@ The demo is **not an empirical scientific result**. Its phrases are written test
 
 ## Project status
 
-**0.2 experimental.** Three layouts and three example languages; expandable in future releases. Documentation and code should be reviewed together. [[Roadmap]] · [[Contributing]] · [[FAQ]]
+**0.4 experimental.** Three layouts and three example languages; expandable in future releases. Documentation and code should be reviewed together. [[Roadmap]] · [[Contributing]] · [[FAQ]]
+
+## Inspect each published card
+
+In the HTML reader, select **Explore source** at the foot of any result, premise, qualification, or evidence card. Review its semantic identity, provenance and evidence, then inspect the words and any explicitly supplied linguistic features. The explorer does not fabricate missing morphological attributes. See [[Source Explorer]].
+
+## v0.4: Autonomous Spek
+
+Spek is not a Konstellation extension. It can import from multiple Kristal or external sources and accepts either SemantiK Architect phrases or preconstructed AI sentences, with distinct provenance. See [Standalone Architecture](Standalone-Architecture), [Source Connectors](Source-Connectors), and [Language Channels](Language-Channels).

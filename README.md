@@ -2,11 +2,11 @@
 
 **Structured knowledge. Reusable forms. Multilingual publications.**
 
-**Version: 0.2.0 — Rendering & Semantic Fidelity** ([upgrade guide](docs/UPGRADE_0.2.md), [font configuration](docs/FONTS.md)).
+**Version: 0.4.0 — Standalone Connectors and Language Channels** ([source inspection guide](docs/SOURCE_EXPLORER.md), [v0.2 rendering guide](docs/UPGRADE_0.2.md), [font configuration](docs/FONTS.md)).
 
-Spek is a **local-first semantic publishing engine** that assembles readable scientific-style documents from **typed semantic units**, **short language realizations**, and **standardized editorial layouts**. One content model can be expressed in multiple languages without asking a language engine to improvise long paragraphs.
+Spek is an **autonomous, local-first semantic publishing engine** that assembles readable scientific-style documents from **typed semantic units**, **short language realizations**, and **standardized editorial layouts**. One content model can be expressed in multiple languages without asking a language engine to improvise long paragraphs.
 
-> **Spek is a publishing layer, not a source of scientific truth.** The included article is fictional/illustrative, and its French, English, and Italian sentences are manually supplied fixtures—not certified SemantiK output. Spek does **not** compute or authenticate Kristal v9 canonical commitments, certify GF/PGF RuntimeSets, grant publication approval, or activate Kristal states.
+> **Spek is an independent publishing product, not a Konstellation extension or a source of scientific truth.** The included article is fictional/illustrative, and its French, English, and Italian sentences are manually supplied fixtures—not certified SemantiK output. Spek does **not** compute or authenticate Kristal v9 canonical commitments, certify GF/PGF RuntimeSets, grant publication approval, or activate Kristal states.
 
 ## Why Spek?
 
@@ -23,9 +23,10 @@ Spek is a **local-first semantic publishing engine** that assembles readable sci
 | Engine | Python module `spek`; CLI `spek` / `python -m spek` |
 | Layout library | `result-card`, `argument-map`, `comparison` (JSON contract + dedicated HTML/TeX/PDF presentation) |
 | Language support | FR, EN, IT strict parity; no automatic translation or silent fallback |
-| Output | Static HTML, PDF, XeLaTeX source, per-language `document.json`, SHA-256 inventory (`manifest.json`) |
+| Output | Static HTML with per-card source explorers, PDF, XeLaTeX source, per-language `document.json`, SHA-256 inventory (`manifest.json`) |
+| Source Explorer | Each card reveals semantic unit identity, proof references, provenance, word segmentation, and **supplied** linguistic attributes — never inferred grammar |
 | Integrity | Typed slots, bounded cardinality, cross-references, epistemic labels, shared rendering model and source-reference checks |
-| Integration | Explicit importer for the supplied historical SemantiK phrase prototype; never upgrades fixtures to qualified data |
+| Integration | Optional Konstellation `ResultSet 0.2` bridge, generic other-system exchange, legacy SemantiK importer, and frozen AI-sentence importer |
 | Operations | CI preview, manual fail-closed GitHub Pages workflow, local site verifier |
 | Documentation | Detailed `/docs` plus a complete English GitHub wiki source in `/wiki` |
 
@@ -57,12 +58,43 @@ python -m spek build \
 
 **A successful demonstration build is not permission to publish.** Publication of real research requires reviewed, qualified source data and separate authorization.
 
+## v0.4: Optional connectors and two language channels
+
+Spek **runs completely independently** from Konstellation, and can attach to multiple Kristals or non-Kristal systems. The core accepts native Spek article JSON; optional adapters can import **Konstellation `ResultSet 0.2`** or a generic **`spek.exchange/0.1`** selection. All mappings are operator-supplied and pin the source assertion content; reader scope is explicitly recorded. The imported text remains a *derived, non-authoritative preview*.
+
+Language expression takes **one of two separate routes per phrase**:
+
+1. `semantik_architect`: externally supplied short SemantiK realizations with request/RuntimeSet provenance when available; Spek does not run GF or certify RuntimeSets.
+2. `ai_preconstructed`: sentences authored by an AI **outside Spek**, then frozen and imported with generation and human-review metadata; no SemantiK invocation, no GF qualification and no automatic LLM calls.
+
+The existing v0.3 manual fixtures remain `legacy`. Every card's **Source Explorer** can show its external source context, language channel and an operator-configured link back to the upstream reader. Importing does not install any plugin in Konstellation or activate a Kristal state.
+
+See [Standalone connectors](docs/STANDALONE_AND_CONNECTORS.md) and [Language channels](docs/LANGUAGE_CHANNELS.md), with complete English wiki pages [Source Connectors](wiki/Source-Connectors.md) and [Language Channels](wiki/Language-Channels.md).
+
+**Local Konstellation export demonstration (no live server):**
+
+```powershell
+python -m spek bridge-import --adapter konstellation --input examples/bridge/konstellation-resultset.json --template examples/article.json --mapping examples/bridge/konstellation-mapping.json --out bridge-article.json
+python -m spek build --source bridge-article.json --out dist-bridge
+python -m spek verify-site dist-bridge
+```
+
+**Same Spek layouts with a different system and frozen AI examples:**
+
+```powershell
+python -m spek bridge-import --adapter exchange --input examples/bridge/external-system-exchange.json --template examples/article.json --mapping examples/bridge/external-system-mapping.json --out external-article.json
+python -m spek import-ai --input examples/bridge/ai-preconstructed-example.json --base examples/bridge/realizations-without-example-claim.json --out ai-realizations.json
+python -m spek build --source external-article.json --realizations ai-realizations.json --out dist-external
+```
+
+These are **illustrative exports and sentences**, not a claim of live Konstellation integration or a real AI model invocation. Published datasets require explicit disclosure authorization and independent review.
+
 ## Architecture
 
 ```text
-           Canonical Kristal knowledge (external authority)
+           Knowledge sources: Kristal(s) / external systems / local authoring
                             |
-            vetted, derived semantic projection
+            explicitly mapped, derived preview projection
                             v
                   Article source JSON
                             |        reviewed short phrases
@@ -86,6 +118,8 @@ python -m spek build \
               manually gated GitHub Pages publish
 ```
 
+The HTML reader includes a **"Explore source" button-like toggle in every card**. It expands a structured inspector without exposing raw JSON. Unprovided word attributes display "Not supplied"; the sample word annotations are explicitly illustrative, not certified SemantiK output. See [Source Explorer](docs/SOURCE_EXPLORER.md).
+
 The derived article source is **not a new canonical Kristal artifact**. Spek reads it and emits other derivatives; it does not write back to Kristal.
 
 ## The three layouts
@@ -99,6 +133,10 @@ The derived article source is **not a new canonical Kristal artifact**. Spek rea
 The `layouts/*.json` files hold **typed slot contracts**. The current prototype's renderers are explicit Python templates in `spek/render.py`; adding a wholly new layout requires updating the renderer as well as adding a JSON file. This is intentionally **not** a generic arbitrary-template interpreter yet. See [Layout design](docs/LAYOUT_DESIGN.md).
 
 For v0.2 output parity, PDF font setup and existing output migration see [Upgrade guide](docs/UPGRADE_0.2.md) and [Fonts](docs/FONTS.md).
+
+## Spek v0.4 test matrix
+
+The demo fixtures are explicitly synthetic. The automated suite checks bridge mappings, source reader-policy agreement, assertion/source payload fingerprints, AI/SemantiK channel isolation, unsafe navigation schemes, local build and the existing v0.3 rendering regressions. A separate development check validated the sample Konstellation `ResultSet 0.2` against the JSON Schema extracted from the supplied Konstellation snapshot. **No live server, real AI generator or real GF RuntimeSet was invoked**.
 
 ## GitHub wiki
 
@@ -128,6 +166,6 @@ scripts/               safe wiki sync and repository setup assistance
 
 ## Project status
 
-**Prototype 0.1 / experimental.** FR/EN/IT outputs and local tests are available. Real SemantiK RuntimeSet execution, JCS commitment verification, JATS/Crossref/DOI support, externally authenticated approval records, generalized layout rendering, and independent translation equivalence tests are **not implemented**. Do not infer those capabilities from the example.
+**Prototype 0.4 / experimental.** FR/EN/IT outputs and local tests are available. Live Konstellation integration in a deployed environment, native AI generation, real SemantiK RuntimeSet execution, JCS commitment verification, JATS/Crossref/DOI support, externally authenticated approval records, generalized layout rendering, and independent translation equivalence tests are **not implemented**. Do not infer those capabilities from the example.
 
 See [Roadmap](docs/ROADMAP.md). Contributions are welcome via the proposed [contribution guide](CONTRIBUTING.md); **no copyright license is granted by this repository unless the rights holder explicitly adds a license** (see [License decision](LICENSE-DECISION.md)).

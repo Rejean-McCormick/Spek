@@ -47,3 +47,7 @@ The test suite checks the semantic slots against all renderers, PDF extraction a
 ## Release boundaries
 
 The code remains an experimental derived publishing adapter. No canonical mutations, state activation, cross-language certification, or public publishing rights are implied by a successful build.
+
+## New in 0.3
+
+The per-card [[Source Explorer]] presents the same source identities as structured HTML, with optional validated word annotations. When annotations are absent, only the surface tokens are shown; morphology is never inferred. The richer projection is now `spek.document/0.3` and existing PDF/LaTeX traceability is retained.
