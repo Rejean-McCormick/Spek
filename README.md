@@ -131,5 +131,3 @@ scripts/               safe wiki sync and repository setup assistance
 **Prototype 0.1 / experimental.** FR/EN/IT outputs and local tests are available. Real SemantiK RuntimeSet execution, JCS commitment verification, JATS/Crossref/DOI support, externally authenticated approval records, generalized layout rendering, and independent translation equivalence tests are **not implemented**. Do not infer those capabilities from the example.
 
 See [Roadmap](docs/ROADMAP.md). Contributions are welcome via the proposed [contribution guide](CONTRIBUTING.md); **no copyright license is granted by this repository unless the rights holder explicitly adds a license** (see [License decision](LICENSE-DECISION.md)).
-#   S p e k  
- 
