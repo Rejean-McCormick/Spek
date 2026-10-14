@@ -83,3 +83,7 @@ An exporter must emit a JSON object like:
 - **Spek → Konstellation/other:** Source Explorer contains the mapped source reference and a configurable deep link. This already works in exported static HTML.
 
 The static page has no implicit authenticated session and makes no API calls. Live updates, Konstellation UI buttons, identity federation and source authorization synchronization are **not implemented**. There is no plug-in loaded inside Konstellation.
+
+## Spek v0.5 educational extension
+
+Spek now also supports curated, read-only Ekole/Kompose **public/demo excerpts** using `spek.educational-projection/1`. Five versioned educational layout contracts are independent of the source adapter. See [Educational Layouts](EDUCATIONAL_LAYOUTS.md), [Educational Connectors](EDUCATIONAL_CONNECTORS.md), and [Educational Privacy](EDUCATIONAL_PRIVACY.md). Spek neither orchestrates missions nor certifies curricula nor authorizes restricted static publication.

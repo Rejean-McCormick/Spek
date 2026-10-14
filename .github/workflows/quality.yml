@@ -42,3 +42,16 @@ jobs:
         run: python -m spek build --source external-article.json --realizations ai-realizations.json --out preview-external --formats html,tex
       - name: Verify bridged publication
         run: python -m spek verify-site preview-external
+
+      - name: Test curated Ekole education import
+        run: python -m spek import-educational --adapter ekole --input examples/education/ekole-curated-preview.json --out-dir education-ekole
+      - name: Compile educational preview (never published)
+        run: python -m spek build --source education-ekole/article.json --realizations education-ekole/realizations.json --out preview-education --formats html,pdf,tex
+      - name: Verify educational preview
+        run: python -m spek verify-site preview-education
+      - name: Test Kompose preauthorized public excerpt import
+        run: python -m spek import-educational --adapter kompose --input examples/education/kompose-public-excerpt.json --out-dir education-kompose
+      - name: Compile Kompose public excerpt locally only
+        run: python -m spek build --source education-kompose/article.json --realizations education-kompose/realizations.json --out preview-kompose --formats html,pdf,tex
+      - name: Verify Kompose local preview
+        run: python -m spek verify-site preview-kompose

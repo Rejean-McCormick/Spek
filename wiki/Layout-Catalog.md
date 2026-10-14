@@ -29,3 +29,7 @@ The first Spek library contains three reusable editorial layouts. Their authorit
 ## Creating layouts
 
 A JSON contract alone is not enough in 0.1. New IDs must be implemented in the audited HTML/TeX/PDF renderers and language label tables, and covered by tests. Read [[Layout Authoring]] for the workflow.
+
+## v0.5 educational templates
+
+Five additional layouts: concept card, learning path, evidence comparison, observation vs inference, and documented chronology. See [[Educational Layout Pack]].

@@ -30,3 +30,7 @@ No canonical input is copied into static site outputs by default. The HTML metad
 ## Design principle
 
 A layout is defined as a stable editorial **contract**. Its view in HTML/PDF/TeX can evolve independently of content and language; a new version must be tracked and its effects reviewed. Layout reuse can increase scanability, but gains in reading speed are a hypothesis requiring an actual user study, not a proven outcome of this prototype.
+
+## Spek v0.5 educational extension
+
+Spek now also supports curated, read-only Ekole/Kompose **public/demo excerpts** using `spek.educational-projection/1`. Five versioned educational layout contracts are independent of the source adapter. See [Educational Layouts](EDUCATIONAL_LAYOUTS.md), [Educational Connectors](EDUCATIONAL_CONNECTORS.md), and [Educational Privacy](EDUCATIONAL_PRIVACY.md). Spek neither orchestrates missions nor certifies curricula nor authorizes restricted static publication.

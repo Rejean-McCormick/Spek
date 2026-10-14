@@ -63,7 +63,12 @@ footer{border-top:1px solid var(--line);padding-top:25px;margin-top:50px;color:v
 .source-modal .token-table{min-width:670px}.source-modal .source-attributes{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media(max-width:670px){.source-modal-content{padding:10px}.source-modal-header{padding:10px 13px}.source-modal .source-attributes{grid-template-columns:1fr}}
 
-@media print{body{background:white}.wrapper{padding:0}.panel{box-shadow:none;break-inside:avoid}nav{display:none}footer{break-before:avoid}}
+@media print{body{background:white}.wrapper{padding:0}.panel{box-shadow:none}nav{display:none}footer{break-before:avoid}}
+/* Educational layouts: keep a consistent, inspectable card vocabulary. */
+.learning-steps,.timeline{margin-top:16px}
+.learning-steps .unit,.timeline .unit{padding-left:14px;border-left:3px solid var(--accent)}
+.learning-steps .unit+.unit,.timeline .unit+.unit{margin-top:14px}
+@media print{.source-inspector,.source-modal,.exports,.source-trigger{display:none!important}section.panel{break-inside:auto}.tile,.highlight,.unit{break-inside:avoid}footer{font-size:.66rem}.wrapper{padding:0}}
 '''
 
 def _unit_html(item: DocumentItem) -> str:
@@ -105,6 +110,28 @@ def section_html(doc: SpekDocument, sec: DocumentSection) -> str:
               +'<div class="grid">'+_slot_html(sec,'criterion',doc)+'</div><div class="compare">'
               +'<div>'+_slot_html(sec,'approach_a',doc)+'</div><div>'+_slot_html(sec,'approach_b',doc)+'</div></div>'
               +'<div class="grid">'+_slot_html(sec,'synthesis',doc)+_slot_html(sec,'limitations',doc)+'</div>')
+    elif l=='concept-card':
+        body=(_slot_html(sec,'definition',doc,'highlight')
+              +'<div class="grid">'+_slot_html(sec,'examples',doc)+_slot_html(sec,'counterexamples',doc)+'</div>'
+              +'<div class="grid">'+_slot_html(sec,'context',doc)+_slot_html(sec,'limits',doc)+'</div>')
+    elif l=='learning-path':
+        body=(_slot_html(sec,'objective',doc,'highlight')
+              +'<div class="grid">'+_slot_html(sec,'prerequisites',doc)+_slot_html(sec,'reflection',doc)+'</div>'
+              +'<div class="learning-steps">'+_slot_html(sec,'steps',doc)+'</div>'
+              +_slot_html(sec,'limits',doc))
+    elif l=='evidence-comparison':
+        body=(_slot_html(sec,'question',doc,'highlight')
+              +'<div class="grid">'+_slot_html(sec,'source_a',doc)+_slot_html(sec,'source_b',doc)+'</div>'
+              +'<div class="compare"><div>'+_slot_html(sec,'perspective_a',doc)+'</div><div>'+_slot_html(sec,'perspective_b',doc)+'</div></div>'
+              +'<div class="grid">'+_slot_html(sec,'synthesis',doc)+_slot_html(sec,'limits',doc)+'</div>')
+    elif l=='observation-inference':
+        body=(_slot_html(sec,'observations',doc,'highlight')
+              +'<div class="grid">'+_slot_html(sec,'interpretation',doc)+_slot_html(sec,'verification',doc)+'</div>'
+              +_slot_html(sec,'limits',doc))
+    elif l=='chronology':
+        body=(_slot_html(sec,'context',doc,'highlight')
+              +'<div class="timeline">'+_slot_html(sec,'events',doc)+'</div>'
+              +'<div class="grid">'+_slot_html(sec,'interpretation',doc)+_slot_html(sec,'limits',doc)+'</div>')
     else:
         raise ValidationError('Unknown renderer: '+l)
     return top+body+'</div></section>'
@@ -154,7 +181,7 @@ def article_html(m: Compiled, lang: str, formats=('html','pdf','tex')) -> str:
 })();
 </script>"""
     return f'''<!doctype html><html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{html.escape(doc.title)}</title><meta name="description" content="{html.escape(doc.abstract, quote=True)}"><style>{CSS}</style></head>
-<body><main class="wrapper"><nav><span>SPEK · 0.4</span><div aria-label="{html.escape(t['lang'])}">{langs}</div></nav>
+<body><main class="wrapper"><nav><span>SPEK · 0.5</span><div aria-label="{html.escape(t['lang'])}">{langs}</div></nav>
 <header><span class="eyebrow">{html.escape(t['eyebrow'])}</span><h1>{html.escape(doc.title)}</h1><p class="subtitle">{html.escape(doc.subtitle)}</p>{warn}{exports}</header>
 <div class="abstract"><h2>{html.escape(t['abstract'])}</h2><p>{html.escape(doc.abstract)}</p></div>
 <div class="toc"><strong>{html.escape(t['contents'])}</strong>{toc}</div>
@@ -171,7 +198,7 @@ def landing_html(m: Compiled) -> str:
             f'<meta name="viewport" content="width=device-width, initial-scale=1">'
             f'<title>Spek — Structured multilingual publications</title></head>'
             f'<body style="font-family:system-ui;background:#f6f7f9;color:#1b2937;max-width:780px;margin:10vh auto;padding:30px">'
-            f'<p style="letter-spacing:.18em;color:#215d8e">SPEK · 0.4</p>'
+            f'<p style="letter-spacing:.18em;color:#215d8e">SPEK · 0.5</p>'
             f'<h1>One meaning. Many structured expressions.</h1>'
             f'<p>Multilingual editorial prototype. Demonstration content only; not scientifically validated.</p>'
             f'<nav aria-label="Select article language">{choices}</nav></body></html>')
@@ -200,6 +227,16 @@ def article_tex(m: Compiled, lang: str) -> str:
             content.extend([featured(sec,'thesis'),sl(sec,'premises'),pair(sec,'inference','conclusion'),sl(sec,'objection')])
         elif sec.layout=='comparison':
             content.extend([featured(sec,'topic'),sl(sec,'criterion'),pair(sec,'approach_a','approach_b'),pair(sec,'synthesis','limitations')])
+        elif sec.layout=='concept-card':
+            content.extend([featured(sec,'definition'),pair(sec,'examples','counterexamples'),pair(sec,'context','limits')])
+        elif sec.layout=='learning-path':
+            content.extend([featured(sec,'objective'),pair(sec,'prerequisites','reflection'),sl(sec,'steps'),sl(sec,'limits')])
+        elif sec.layout=='evidence-comparison':
+            content.extend([featured(sec,'question'),pair(sec,'source_a','source_b'),pair(sec,'perspective_a','perspective_b'),pair(sec,'synthesis','limits')])
+        elif sec.layout=='observation-inference':
+            content.extend([featured(sec,'observations'),pair(sec,'interpretation','verification'),sl(sec,'limits')])
+        elif sec.layout=='chronology':
+            content.extend([featured(sec,'context'),sl(sec,'events'),pair(sec,'interpretation','limits')])
     banner = (r'\noindent\fbox{\parbox{0.95\textwidth}{\textbf{'+escape_tex(t['demo'])+'}}}'+'\n') if doc.demonstration else ''
     preamble=[r'\documentclass[11pt,a4paper]{article}',r'\usepackage{fontspec}',
         # Portable across Linux / Windows, without bundling proprietary fonts.
@@ -284,11 +321,22 @@ def article_pdf(m: Compiled, lang: str, path: Path) -> None:
         'note':ParagraphStyle('note',fontName='SpekUnicode',fontSize=6.2,leading=9,spaceAfter=3,textColor=muted,wordWrap='CJK'),
         'warning':ParagraphStyle('warning',fontName='SpekUnicodeBold',fontSize=7.5,leading=10,spaceAfter=7,textColor=colors.HexColor('#936108')),
     }
+    educational_packet = any(sec.layout in {'concept-card','learning-path','evidence-comparison','observation-inference','chronology'}
+                             for sec in docmodel.sections)
+    if educational_packet:
+        # Dense reference sheets, without shrinking semantic identities away.
+        styles['note'].spaceAfter=1
+        styles['note'].leading=7.3
+        styles['body'].leading=11
+        styles['body'].spaceAfter=1
+        styles['head'].spaceBefore=7
+        styles['head'].spaceAfter=3
     def para(text,style='body'):
         return Paragraph(xml_escape(text),styles[style])
     story=[para(docmodel.title,'title'),para(docmodel.subtitle,'subtitle')]
     if docmodel.demonstration:story.append(para(t['demo'],'warning'))
     story.extend([para(t['abstract'],'minor'),para(docmodel.abstract),HRFlowable(width='100%',thickness=.7,color=line)])
+    heading_boundary=len(story)  # optional early provenance on longer reports
     card_width=A4[0]-2*43-12
     def box(items,label,fill=colors.white,width=card_width):
         rows=[para(label,'minor')]
@@ -321,6 +369,23 @@ def article_pdf(m: Compiled, lang: str, path: Path) -> None:
                           box(sec.items('criterion'),t['criterion']),
                           paired(sec,'approach_a','approach_b',True),
                           paired(sec,'synthesis','limitations')])
+        elif sec.layout=='concept-card':
+            story.extend([box(sec.items('definition'),t['definition'],pale),Spacer(1,5),
+                          paired(sec,'examples','counterexamples'),paired(sec,'context','limits')])
+        elif sec.layout=='learning-path':
+            story.extend([box(sec.items('objective'),t['objective'],pale),Spacer(1,5),
+                          paired(sec,'prerequisites','reflection'),box(sec.items('steps'),t['steps']),
+                          box(sec.items('limits'),t['limits'])])
+        elif sec.layout=='evidence-comparison':
+            story.extend([box(sec.items('question'),t['question'],pale),Spacer(1,5),
+                          paired(sec,'source_a','source_b'),paired(sec,'perspective_a','perspective_b',True),
+                          paired(sec,'synthesis','limits')])
+        elif sec.layout=='observation-inference':
+            story.extend([box(sec.items('observations'),t['observations'],pale),Spacer(1,5),
+                          paired(sec,'interpretation','verification'),box(sec.items('limits'),t['limits'])])
+        elif sec.layout=='chronology':
+            story.extend([box(sec.items('context'),t['context'],pale),Spacer(1,5),
+                          box(sec.items('events'),t['events']),paired(sec,'interpretation','limits')])
         story.append(Spacer(1,7))
     # Trace block may not break into an orphan page with only hashes.
     meta=[para(t['trace'],'minor'),
@@ -328,10 +393,16 @@ def article_pdf(m: Compiled, lang: str, path: Path) -> None:
           para(t['source']+': '+docmodel.source_sha256,'note'),
           para(t['realizations']+': '+docmodel.realizations_sha256,'note'),
           para(t['layouts']+': '+docmodel.layouts_sha256,'note')]
-    story.append(KeepTogether([HRFlowable(width='100%',thickness=.7,color=line)]+meta))
+    trace_block = KeepTogether([HRFlowable(width='100%',thickness=.7,color=line)]+meta)
+    if educational_packet:
+        # Long educational packets otherwise create a final page containing ONLY
+        # hashes. Place complete provenance near the abstract, not an orphan footer.
+        story.insert(heading_boundary, trace_block)
+    else:
+        story.append(trace_block)
     def page(canvas,pdf_doc):
         canvas.saveState();canvas.setFont('SpekUnicode',7);canvas.setFillColor(muted)
-        canvas.drawString(43,27,'SPEK · 0.4')
+        canvas.drawString(43,27,'SPEK · 0.5')
         canvas.drawRightString(A4[0]-43,27,str(pdf_doc.page))
         canvas.restoreState()
     pdf=SimpleDocTemplate(str(path),pagesize=A4,rightMargin=43,leftMargin=43,

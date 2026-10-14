@@ -11,3 +11,7 @@
 **0.4 (proposed):** Scientific citation formats, bibliographic metadata, JATS/Crossref/DOI-ready exports, release provenance and archives.
 
 **Beyond:** Only after independent validation and owner authorization would production-critical use be appropriate. This document is a roadmap, not a certification statement or delivery commitment.
+
+## v0.5 milestone
+
+Five educational layouts, local-curated Ekole/Kompose adapters, privacy boundary tests and trilingual example; live API hooks and real institutional review remain future work.

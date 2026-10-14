@@ -13,6 +13,7 @@ from .render import article_html, article_tex, article_pdf, landing_html
 from .document import project_document
 from .bridge import bridge_import, fetch_konstellation
 from .ai_phrases import import_ai
+from .education import import_educational
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -192,6 +193,10 @@ def main(argv=None):
     ai.add_argument('--input',required=True)
     ai.add_argument('--base',help='Existing realization bundle to extend (no overwrite)')
     ai.add_argument('--out',required=True)
+    edu=sub.add_parser('import-educational',help='Import a curated Ekole/Kompose local-preview projection (never raw upstream data)')
+    edu.add_argument('--adapter',required=True,choices=('ekole','kompose'))
+    edu.add_argument('--input',required=True)
+    edu.add_argument('--out-dir',required=True)
     args=parser.parse_args(argv)
     try:
         if args.command=='check':
@@ -210,6 +215,14 @@ def main(argv=None):
             val=fetch_konstellation(args.base_url,read_json(Path(args.query_file)),token=token)
             write(Path(args.out),json.dumps(val,ensure_ascii=False,sort_keys=True,indent=2)+'\n')
             print(f'CAPTURED: complete Konstellation ResultSet · {args.out}')
+        elif args.command=='import-educational':
+            source,realizations=import_educational(read_json(Path(args.input)),args.adapter)
+            target=Path(args.out_dir).resolve()
+            if target.is_symlink() or target in {Path.cwd().resolve(),ROOT.resolve()} or target.exists() and any(target.iterdir()):
+                raise ValidationError('Educational import output must be a new/empty directory')
+            write(target/'article.json',json.dumps(source,ensure_ascii=False,indent=2,sort_keys=True)+'\n')
+            write(target/'realizations.json',json.dumps(realizations,ensure_ascii=False,indent=2,sort_keys=True)+'\n')
+            print(f'IMPORTED: {args.adapter} · {len(source["sections"])} layouts · local preview only · {target}')
         elif args.command=='import-ai':
             val=import_ai(read_json(Path(args.input)),read_json(Path(args.base)) if args.base else None)
             write(Path(args.out),json.dumps(val,ensure_ascii=False,indent=2,sort_keys=True)+'\n')

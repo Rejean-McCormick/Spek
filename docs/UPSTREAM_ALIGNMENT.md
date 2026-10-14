@@ -26,3 +26,7 @@ This prototype was designed by inspecting the user's snapshots of **Kristal Auth
 The Authoring Kit/Framework owner can export a locally checked **semantic editorial projection** with `state_ref`, pinned source artifact IDs, a separately verified canonical commitment and disclosed permitted statements. The SemantiK owner can supply a qualified set of per-unit per-language realizations, with conformance evidence and exact request/RuntimeSet identifiers. The layout compiler can then consume only those vetted inputs and emit derived web/document artifacts.
 
 This bridge must be designed and certified jointly with the upstream contract owners; the prototype does not silently infer semantic content from arbitrary workspace JSON.
+
+## Spek v0.5 educational extension
+
+Spek now also supports curated, read-only Ekole/Kompose **public/demo excerpts** using `spek.educational-projection/1`. Five versioned educational layout contracts are independent of the source adapter. See [Educational Layouts](EDUCATIONAL_LAYOUTS.md), [Educational Connectors](EDUCATIONAL_CONNECTORS.md), and [Educational Privacy](EDUCATIONAL_PRIVACY.md). Spek neither orchestrates missions nor certifies curricula nor authorizes restricted static publication.

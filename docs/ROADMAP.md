@@ -48,3 +48,7 @@ Independent scientific validation and upstream governance decisions are prerequi
 
 - Delivered: offline Konstellation ResultSet importer, generic exchange adapter, explicit opt-in Konstellation query capture, configurable outbound deep links, AI-preconstructed phrase importer, distinct channel provenance, and Source Explorer source-system references.
 - Not delivered: Konstellation-side navigation button, live bridge against deployed servers, generalized Kristal canonical cryptographic verification, LLM generation, native SemantiK Architect runtime execution or automatic publication.
+
+## Spek v0.5 educational extension
+
+Spek now also supports curated, read-only Ekole/Kompose **public/demo excerpts** using `spek.educational-projection/1`. Five versioned educational layout contracts are independent of the source adapter. See [Educational Layouts](EDUCATIONAL_LAYOUTS.md), [Educational Connectors](EDUCATIONAL_CONNECTORS.md), and [Educational Privacy](EDUCATIONAL_PRIVACY.md). Spek neither orchestrates missions nor certifies curricula nor authorizes restricted static publication.

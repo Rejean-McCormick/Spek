@@ -24,7 +24,7 @@ The demo is **not an empirical scientific result**. Its phrases are written test
 
 ## Project status
 
-**0.4 experimental.** Three layouts and three example languages; expandable in future releases. Documentation and code should be reviewed together. [[Roadmap]] · [[Contributing]] · [[FAQ]]
+**0.5 experimental.** Eight layouts and three example languages; expandable in future releases. Documentation and code should be reviewed together. [[Roadmap]] · [[Contributing]] · [[FAQ]]
 
 ## Inspect each published card
 
@@ -33,3 +33,7 @@ In the HTML reader, select **Explore source** at the foot of any result, premise
 ## v0.4: Autonomous Spek
 
 Spek is not a Konstellation extension. It can import from multiple Kristal or external sources and accepts either SemantiK Architect phrases or preconstructed AI sentences, with distinct provenance. See [Standalone Architecture](Standalone-Architecture), [Source Connectors](Source-Connectors), and [Language Channels](Language-Channels).
+
+## v0.5: Educational layouts and curated connectors
+
+Five educational templates plus strictly filtered Ekole/Kompose preview imports. See [[Educational Layout Pack]], [[Ekole Integration]], [[Kompose Integration]] and [[Educational Privacy]]. No upstream curricular or access authority is transferred to Spek.

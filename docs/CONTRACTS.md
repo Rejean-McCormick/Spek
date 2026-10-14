@@ -49,3 +49,7 @@ Each `slots` entry has `allowed_kinds[]`, `min`, and `max`. A missing required s
 ## Build (`kristal.layout-build-manifest/0.1`)
 
 `manifest.json` inventories every output relative path and byte digest. It includes the source/realization/layout fingerprints, generated languages, versions, and explicit `built_not_published_not_activated` lifecycle status. `mode: production_candidate` does not imply publication authorization. Run `verify-site` before transport and after checkout to detect unauthorized alterations.
+
+## Spek v0.5 educational extension
+
+Spek now also supports curated, read-only Ekole/Kompose **public/demo excerpts** using `spek.educational-projection/1`. Five versioned educational layout contracts are independent of the source adapter. See [Educational Layouts](EDUCATIONAL_LAYOUTS.md), [Educational Connectors](EDUCATIONAL_CONNECTORS.md), and [Educational Privacy](EDUCATIONAL_PRIVACY.md). Spek neither orchestrates missions nor certifies curricula nor authorizes restricted static publication.

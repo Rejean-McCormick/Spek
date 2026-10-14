@@ -35,3 +35,7 @@ python -m spek build --source article.json --realizations realizations.json \
 ```
 
 Use [[Layout Catalog]] and [[Article Source Format]] for field-level details. A demonstration build is not publication clearance.
+
+## Try the educational preview (v0.5)
+
+On Windows: `scripts\demo-education.bat`. Elsewhere see [[Ekole Integration]] and [[Kompose Integration]]. All content is fictional and remains local preview only.

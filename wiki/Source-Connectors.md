@@ -27,3 +27,7 @@ python -m spek bridge-import --adapter exchange --input examples/bridge/external
 The example links use reserved demonstration domains; configure actual upstream deep-link routes in your mapping. No adapter modifies upstream data. Public website exposure requires separate authorization.
 
 See `docs/STANDALONE_AND_CONNECTORS.md` for the contract, security assumptions and export JSON example.
+
+## Educational adapters (v0.5)
+
+`import-educational --adapter ekole|kompose` is a separate, curated projection importer. It never calls upstream school services or bypasses access controls; see [[Ekole Integration]] and [[Kompose Integration]].

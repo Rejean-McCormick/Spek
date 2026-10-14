@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0 — Educational publishing, independent Ekole/Kompose adapters
+
+- Five additional typed layouts (eight total), localized in FR/EN/IT and rendered in HTML, PDF and LaTeX.
+- `spek.educational-projection/1` curated input contract, `import-educational --adapter ekole|kompose` and independently verifiable local builds.
+- Fail-closed rejection of teacher/session/PII fields, unknown metadata, unreferenced phrase payloads, private evidence locations and session-restricted Kompose content.
+- No public release/teacher grade/clinical inference or educational authority conferred by the export. All educational imports remain local preview projections and cannot pass Spek's production gate.
+- A fictitious Ekole school-garden example across five layouts and a separate Kompose public-excerpt example, neither an actual upstream deployment.
+- Windows-friendly `.bat` demo script, fixed the PowerShell bridge demo's comma argument issue, tests and English wiki additions.
+
+
 ## 0.4.0 — Autonomous interoperability and language-channel separation
 
 - Spek is a standalone compiler; external connectors are optional.

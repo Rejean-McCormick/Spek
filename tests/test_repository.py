@@ -21,7 +21,7 @@ class RepositoryIntegrity(unittest.TestCase):
         model = compile_inputs(*fixtures())
         html = landing_html(model)
         self.assertIn('<html lang="en">', html)
-        self.assertIn('SPEK · 0.4', html)
+        self.assertIn('SPEK · 0.5', html)
         for language in ('fr', 'en', 'it'):
             self.assertIn(f'{language}/index.html', html)
 

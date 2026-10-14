@@ -10,6 +10,12 @@
 - [[Source Connectors]]
 - [[Language Channels]]
 
+**Education**
+- [[Educational Layout Pack]]
+- [[Ekole Integration]]
+- [[Kompose Integration]]
+- [[Educational Privacy]]
+
 **Design**
 - [[Layout Catalog]]
 - [[Layout Authoring]]

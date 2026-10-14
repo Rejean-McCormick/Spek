@@ -2,7 +2,7 @@
 
 **Structured knowledge. Reusable forms. Multilingual publications.**
 
-**Version: 0.4.0 — Standalone Connectors and Language Channels** ([source inspection guide](docs/SOURCE_EXPLORER.md), [v0.2 rendering guide](docs/UPGRADE_0.2.md), [font configuration](docs/FONTS.md)).
+**Version: 0.5.0 — Educational Layouts and Curated Interoperability** ([source inspection guide](docs/SOURCE_EXPLORER.md), [v0.2 rendering guide](docs/UPGRADE_0.2.md), [font configuration](docs/FONTS.md)).
 
 Spek is an **autonomous, local-first semantic publishing engine** that assembles readable scientific-style documents from **typed semantic units**, **short language realizations**, and **standardized editorial layouts**. One content model can be expressed in multiple languages without asking a language engine to improvise long paragraphs.
 
@@ -21,12 +21,12 @@ Spek is an **autonomous, local-first semantic publishing engine** that assembles
 | Area | Contents |
 | --- | --- |
 | Engine | Python module `spek`; CLI `spek` / `python -m spek` |
-| Layout library | `result-card`, `argument-map`, `comparison` (JSON contract + dedicated HTML/TeX/PDF presentation) |
+| Layout library | `result-card`, `argument-map`, `comparison` plus five educational layouts: `concept-card`, `learning-path`, `evidence-comparison`, `observation-inference`, `chronology` (eight explicit HTML/TeX/PDF contracts) |
 | Language support | FR, EN, IT strict parity; no automatic translation or silent fallback |
 | Output | Static HTML with per-card source explorers, PDF, XeLaTeX source, per-language `document.json`, SHA-256 inventory (`manifest.json`) |
 | Source Explorer | Each card reveals semantic unit identity, proof references, provenance, word segmentation, and **supplied** linguistic attributes — never inferred grammar |
 | Integrity | Typed slots, bounded cardinality, cross-references, epistemic labels, shared rendering model and source-reference checks |
-| Integration | Optional Konstellation `ResultSet 0.2` bridge, generic other-system exchange, legacy SemantiK importer, and frozen AI-sentence importer |
+| Integration | Optional Konstellation `ResultSet 0.2` bridge, generic exchange, **curated Ekole/Kompose preview importer**, legacy SemantiK and frozen AI-sentence importers |
 | Operations | CI preview, manual fail-closed GitHub Pages workflow, local site verifier |
 | Documentation | Detailed `/docs` plus a complete English GitHub wiki source in `/wiki` |
 
@@ -57,6 +57,44 @@ python -m spek build \
 ```
 
 **A successful demonstration build is not permission to publish.** Publication of real research requires reviewed, qualified source data and separate authorization.
+
+## v0.5: Educational publishing without becoming an education platform
+
+The educational layout pack adds five **editorial** structures, not a grading engine:
+
+| Layout | Typed information it presents |
+| --- | --- |
+| `concept-card` | Definition, example(s), counterexample(s), context, limits |
+| `learning-path` | Objective, prerequisites, ordered steps, reflection, limits |
+| `evidence-comparison` | Question, two source records, two perspectives, synthesis, limits |
+| `observation-inference` | Explicit observations, interpretation, proposed verification, limits |
+| `chronology` | Context, ordered events, optional interpretation, limits (no implied causality) |
+
+A new `import-educational` command reads **only deliberately filtered `spek.educational-projection/1` exports**. It does **not** crawl Ekole repositories, call Kompose APIs, access student records, infer curricular approvals, produce assessment marks, or authorize publication. Kompose retains access decisions; Ekole retains curriculum and pedagogical validation. A static Spek build cannot protect private student or session data, so these are refused at the input boundary.
+
+**Offline Windows demo (no PowerShell execution-policy change required):**
+
+```bat
+scripts\demo-education.bat
+```
+
+**Or run the portable commands:**
+
+```bash
+python -m spek import-educational --adapter ekole --input examples/education/ekole-curated-preview.json --out-dir education-ekole
+python -m spek build --source education-ekole/article.json --realizations education-ekole/realizations.json --out dist-education --formats html,pdf,tex
+python -m spek verify-site dist-education
+python -m http.server 8000 --directory dist-education
+```
+
+For the separate, public-demo **Kompose** projection:
+
+```bash
+python -m spek import-educational --adapter kompose --input examples/education/kompose-public-excerpt.json --out-dir education-kompose
+python -m spek build --source education-kompose/article.json --realizations education-kompose/realizations.json --out dist-kompose --formats html,pdf,tex
+```
+
+See [Educational Connectors](docs/EDUCATIONAL_CONNECTORS.md), [Educational Layout Pack](docs/EDUCATIONAL_LAYOUTS.md), and [Security Boundaries](docs/EDUCATIONAL_PRIVACY.md). These input files are **fictional, manually translated demonstrations**, not actual Ekole curriculum releases or genuine Kompose access grants.
 
 ## v0.4: Optional connectors and two language channels
 
