@@ -14,6 +14,7 @@ from .document import project_document
 from .bridge import bridge_import, fetch_konstellation
 from .ai_phrases import import_ai
 from .education import import_educational
+from .wiki import build_wiki, verify_wiki, load_profiles
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -193,6 +194,21 @@ def main(argv=None):
     ai.add_argument('--input',required=True)
     ai.add_argument('--base',help='Existing realization bundle to extend (no overwrite)')
     ai.add_argument('--out',required=True)
+    wb=sub.add_parser('build-wiki',help='Create a PRIVATE Arketype-specific GitHub Wiki draft using Spek/SemantiK realizations')
+    wb.add_argument('--source',required=True,help='Explicitly selected Spek semantic article.json')
+    wb.add_argument('--realizations',required=True,help='Frozen SemantiK realization bundle JSON')
+    wb.add_argument('--layouts',default=str(ROOT/'layouts'))
+    wb.add_argument('--templates',default=str(ROOT/'wiki-templates'/'archetype-profiles.json'))
+    wb.add_argument('--archetype',required=True,help='Explicit Arketype slug, never inferred from title')
+    wb.add_argument('--language',default='fr',choices=LANGS)
+    wb.add_argument('--slug',required=True,help='Safe page identifier: lowercase letters/digits/hyphens')
+    wb.add_argument('--out',required=True,help='New private destination directory, never a Git checkout')
+    wb.add_argument('--state-snapshot',help='Required for a real v9 pinned Kristal state')
+    wb.add_argument('--demonstration',action='store_true',help='Only for fixture previews, never a publication authorization')
+    wv=sub.add_parser('verify-wiki',help='Verify the SHA-256 inventory of a private draft')
+    wv.add_argument('path')
+    wl=sub.add_parser('list-wiki-templates',help='List Spek Wiki layouts allowed by each Arketype')
+    wl.add_argument('--templates',default=str(ROOT/'wiki-templates'/'archetype-profiles.json'))
     edu=sub.add_parser('import-educational',help='Import a curated Ekole/Kompose local-preview projection (never raw upstream data)')
     edu.add_argument('--adapter',required=True,choices=('ekole','kompose'))
     edu.add_argument('--input',required=True)
@@ -202,6 +218,20 @@ def main(argv=None):
         if args.command=='check':
             m=load_model(args);print(f'PASS: {len(m.sections)} sections · {len(m.units)} units · {len(m.evidence)} evidence · {",".join(m.languages)} · demo={m.demo}')
         elif args.command=='build': build(args)
+        elif args.command=='build-wiki':
+            manifest=build_wiki(source=Path(args.source),realizations=Path(args.realizations),
+                layouts=Path(args.layouts),templates=Path(args.templates),
+                archetype=args.archetype,language=args.language,slug=args.slug,
+                out=Path(args.out),demonstration=args.demonstration,
+                state_snapshot=Path(args.state_snapshot) if args.state_snapshot else None)
+            print('PRIVATE WIKI DRAFT: '+str(args.out)+' | '+', '.join(manifest['files']))
+        elif args.command=='verify-wiki':
+            manifest=verify_wiki(Path(args.path))
+            print('WIKI VERIFIED: '+str(len(manifest['files']))+' Markdown files (NOT publication approval)')
+        elif args.command=='list-wiki-templates':
+            templates=load_profiles(Path(args.templates))
+            for slug, row in sorted(templates.items()):
+                print(slug+': '+', '.join(row['allowed_layouts']))
         elif args.command=='verify-site':verify_site(args.site,require_production=args.require_production)
         elif args.command=='import-semantik':import_semantik(args)
         elif args.command=='bridge-import':
