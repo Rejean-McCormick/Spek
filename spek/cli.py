@@ -15,6 +15,7 @@ from .bridge import bridge_import, fetch_konstellation
 from .ai_phrases import import_ai
 from .education import import_educational
 from .wiki import build_wiki, verify_wiki, load_profiles
+from .template_library import list_template_categories
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -198,7 +199,7 @@ def main(argv=None):
     wb.add_argument('--source',required=True,help='Explicitly selected Spek semantic article.json')
     wb.add_argument('--realizations',required=True,help='Frozen SemantiK realization bundle JSON')
     wb.add_argument('--layouts',default=str(ROOT/'layouts'))
-    wb.add_argument('--templates',default=str(ROOT/'wiki-templates'/'archetype-profiles.json'))
+    wb.add_argument('--templates',default=str(ROOT/'template_library'/'wiki'/'archetype-profiles.json'))
     wb.add_argument('--archetype',required=True,help='Explicit Arketype slug, never inferred from title')
     wb.add_argument('--language',default='fr',choices=LANGS)
     wb.add_argument('--slug',required=True,help='Safe page identifier: lowercase letters/digits/hyphens')
@@ -207,8 +208,9 @@ def main(argv=None):
     wb.add_argument('--demonstration',action='store_true',help='Only for fixture previews, never a publication authorization')
     wv=sub.add_parser('verify-wiki',help='Verify the SHA-256 inventory of a private draft')
     wv.add_argument('path')
+    sub.add_parser('list-template-categories',help='List template families under template_library')
     wl=sub.add_parser('list-wiki-templates',help='List Spek Wiki layouts allowed by each Arketype')
-    wl.add_argument('--templates',default=str(ROOT/'wiki-templates'/'archetype-profiles.json'))
+    wl.add_argument('--templates',default=str(ROOT/'template_library'/'wiki'/'archetype-profiles.json'))
     edu=sub.add_parser('import-educational',help='Import a curated Ekole/Kompose local-preview projection (never raw upstream data)')
     edu.add_argument('--adapter',required=True,choices=('ekole','kompose'))
     edu.add_argument('--input',required=True)
@@ -228,6 +230,9 @@ def main(argv=None):
         elif args.command=='verify-wiki':
             manifest=verify_wiki(Path(args.path))
             print('WIKI VERIFIED: '+str(len(manifest['files']))+' Markdown files (NOT publication approval)')
+        elif args.command=='list-template-categories':
+            for cat in list_template_categories():
+                print(f"{cat['id']} : {cat['status']} — {cat['description']}")
         elif args.command=='list-wiki-templates':
             templates=load_profiles(Path(args.templates))
             for slug, row in sorted(templates.items()):

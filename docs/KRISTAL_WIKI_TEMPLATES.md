@@ -7,9 +7,13 @@ This is a **presentation layer** for the Kristal Wiki, not a second language gen
 3. **Spek** validates the typed `kristal.layout-article-source/0.1` slots and composes the chosen Arketype page layout, using the *existing* eight Spek editorial contracts from `layouts/*.json`.
 4. **Kristal Manager / public gates** verify C1/C2/C3 and Semantic RuntimeSet evidence outside Spek. The GitHub Wiki receives only independently approved pages after a separate publish operation.
 
+## Template library
+
+Wiki profiles live under `template_library/wiki/` at the root of Spek. Other template families have their own folders under `template_library/` and are currently reserved. Shared typed components continue to live in `layouts/`. Discover categories with `python -m spek list-template-categories`.
+
 ## Archetype selection
 
-The `wiki-templates/archetype-profiles.json` registry records **19 Arketype slugs** with a preferred layout and other admitted layouts. This is a composition hint, not an instruction to force facts into required slots. An Arketype whose data cannot satisfy a Spek layout is **blocked**; the generator never manufactures `evidence`, `limits`, assertions or realizations.
+The `template_library/wiki/archetype-profiles.json` registry records **19 Arketype slugs** with a preferred layout and other admitted layouts. This is a composition hint, not an instruction to force facts into required slots. An Arketype whose data cannot satisfy a Spek layout is **blocked**; the generator never manufactures `evidence`, `limits`, assertions or realizations.
 
 The existing Spek layouts are `result-card`, `argument-map`, `comparison`, `concept-card`, `learning-path`, `evidence-comparison`, `observation-inference`, `chronology`. For topology, taxonomy, mathematical formulae, graphs or other specialized data, add a **new, versioned Spek layout contract** rather than squeezing content into an unrelated card.
 

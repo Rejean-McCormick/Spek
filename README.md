@@ -176,6 +176,35 @@ For v0.2 output parity, PDF font setup and existing output migration see [Upgrad
 
 The demo fixtures are explicitly synthetic. The automated suite checks bridge mappings, source reader-policy agreement, assertion/source payload fingerprints, AI/SemantiK channel isolation, unsafe navigation schemes, local build and the existing v0.3 rendering regressions. A separate development check validated the sample Konstellation `ResultSet 0.2` against the JSON Schema extracted from the supplied Konstellation snapshot. **No live server, real AI generator or real GF RuntimeSet was invoked**.
 
+## Template library — one root directory for all publication families
+
+Reusable page **categories** live in [`template_library/`](template_library/README.md),
+separate from the eight shared typed components in [`layouts/`](layouts/):
+
+```text
+template_library/
+├── wiki/          # Implemented: 19 Arketype mappings and Spek Wiki Markdown drafts
+├── educational/   # Reserved template category (educational layouts work separately)
+├── scientific/    # Reserved template category
+├── report/        # Reserved template category
+└── book/          # Reserved template category
+```
+
+The former root-level `wiki-templates/` folder has been superseded by
+`template_library/wiki/`. All Wiki CLI defaults and tests now resolve the new
+location. Existing educational layout contracts remain in `layouts/`;
+**reserved** folders do not imply working generators.
+
+```bash
+python -m spek list-template-categories
+python -m spek list-wiki-templates
+```
+
+`build-wiki` generates a **private Markdown draft**, not a live GitHub Wiki.
+SemantiK realizations, Arketype mappings, qualified linguistic runtime, source
+provenance and external publication authorizations are separate prerequisites.
+See [Kristal Wiki templates](docs/KRISTAL_WIKI_TEMPLATES.md).
+
 ## GitHub wiki
 
 The English wiki is checked into [`wiki/`](wiki/Home.md) for versioned review. GitHub stores its live wiki in a **separate repository** (`OWNER/Spek.wiki.git`), so it is **not** automatically created by pushing this main repository. See [Wiki publishing](docs/WIKI_PUBLISHING.md) and `scripts/sync-wiki.sh` for the controlled sync procedure.
@@ -194,6 +223,7 @@ See [Release and deployment](docs/PUBLISHING.md), [Security](docs/SECURITY_MODEL
 ```text
 spek/                  validator, compiler and renderers
 layouts/               typed, reusable layout definitions
+template_library/      Wiki category + reserved educational/scientific/report/book categories
 examples/              illustrative semantic content + realization bundles
 tests/                 automated test suite
 docs/                  source-controlled engineering documentation
@@ -204,6 +234,6 @@ scripts/               safe wiki sync and repository setup assistance
 
 ## Project status
 
-**Prototype 0.4 / experimental.** FR/EN/IT outputs and local tests are available. Live Konstellation integration in a deployed environment, native AI generation, real SemantiK RuntimeSet execution, JCS commitment verification, JATS/Crossref/DOI support, externally authenticated approval records, generalized layout rendering, and independent translation equivalence tests are **not implemented**. Do not infer those capabilities from the example.
+**Prototype 0.5 / experimental.** FR/EN/IT outputs and local tests are available. Live Konstellation integration in a deployed environment, native AI generation, real SemantiK RuntimeSet execution, JCS commitment verification, JATS/Crossref/DOI support, externally authenticated approval records, generalized layout rendering, and independent translation equivalence tests are **not implemented**. Do not infer those capabilities from the example.
 
 See [Roadmap](docs/ROADMAP.md). Contributions are welcome via the proposed [contribution guide](CONTRIBUTING.md); **no copyright license is granted by this repository unless the rights holder explicitly adds a license** (see [License decision](LICENSE-DECISION.md)).

@@ -1,5 +1,14 @@
 # Changelog
 
+## Spek template library organization — 2026-11-01
+
+- Consolidated template categories under `template_library/{wiki,educational,scientific,report,book}/`.
+- Migrated the existing Wiki archetype profiles from `wiki-templates/` to `template_library/wiki/`.
+- Updated Wiki CLI defaults, added category discovery (`list-template-categories`) and preserved the eight reusable layouts under `layouts/`.
+- The Wiki category is implemented; other category descriptors remain **reserved**. No new data-processing or publication authority is implied.
+- Packaged as a complete source tree for local restoration, without a `.git` directory.
+
+
 ## 0.5.0 — Educational publishing, independent Ekole/Kompose adapters
 
 - Five additional typed layouts (eight total), localized in FR/EN/IT and rendered in HTML, PDF and LaTeX.

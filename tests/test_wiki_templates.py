@@ -14,14 +14,14 @@ class WikiTemplatesTests(unittest.TestCase):
         kw={'source': ROOT/'examples/article.json',
             'realizations':ROOT/'examples/realizations.json',
             'layouts':ROOT/'layouts',
-            'templates':ROOT/'wiki-templates/archetype-profiles.json',
+            'templates':ROOT/'template_library/wiki/archetype-profiles.json',
             'archetype':'composition-hybride', 'language':'fr',
             'slug':'demo-test', 'out':tmp/'wiki', 'demonstration':True}
         kw.update(overrides)
         return build_wiki(**kw)
 
     def test_registry_covers_all_19_arketype_profiles_and_8_native_spek_layouts(self):
-        profiles=load_profiles(ROOT/'wiki-templates/archetype-profiles.json')
+        profiles=load_profiles(ROOT/'template_library/wiki/archetype-profiles.json')
         self.assertEqual(len(profiles),19)
         layouts={p.stem for p in (ROOT/'layouts').glob('*.json')}
         self.assertEqual(len(layouts),8)
