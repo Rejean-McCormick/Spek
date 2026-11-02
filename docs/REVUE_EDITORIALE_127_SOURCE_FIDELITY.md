@@ -8,7 +8,7 @@
 - 2277 occurrences d’assertions parcourues sur les cinq ; classement exhaustif par section, sans doublon de position.
 - Les positions d’assertions et quelques identifiants sont enregistrés dans `kristal-structure-reviews.json` : **ce ne sont pas des assertions sélectionnées pour publication**.
 - Les SHA-256 correspondent aux octets du ZIP inspecté, **pas à une attestation canonique JCS**.
-- Les 8 layouts existants ne couvrent pas directement tous les besoins des cinq Kristals. Les modèles spécialisés sont des **spécifications**, pas des rendus opérationnels.
+- Les 8 layouts historiques étaient insuffisants. **Depuis la mise à jour de l'atelier**, 19 layouts supplémentaires disposent de contrats typés et de rendus HTML/PDF/TeX/Markdown à partir d'unités explicites ; **aucune réalisation SemantiK n'a été produite automatiquement** et la validité structurelle des graphes/écritures n'est pas attestée.
 - Les assignations de publication sont toujours vides : `kristal-assignments.json`.
 
 ## Analyse individualisée
@@ -111,4 +111,4 @@ Il faut les états de lecture portables et/ou les graphes structurés. Le rappor
 
 ## Intégration à Spek
 
-Le registre des 127 reste dans `template_library/wiki/kristal-ai-proposals.json`. Les cinq revues détaillées sont dans `kristal-structure-reviews.json`, et la liste de layouts à développer dans `specialized-template-designs.json`. **Aucune règle de choix n’est ajoutée au runtime Spek**.
+Le registre des 127 reste dans `template_library/wiki/kristal-ai-proposals.json`. Les cinq revues détaillées sont dans `kristal-structure-reviews.json`, et le registre des 19 layouts spécialisés dans `specialized-template-designs.json`. **Aucune règle de choix n’est ajoutée au runtime Spek**.

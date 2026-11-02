@@ -1,6 +1,6 @@
 {
   "format": "spek.wiki-kristal-source-reviews/1.0",
-  "revision": "2026-11-02/2-canonical-slugs",
+  "revision": "2026-11-02/3-specialized-layout-support",
   "authorship": "AI_editorial_review_from_user_supplied_Kristal-Aa.zip",
   "source_archive_sha256": "f9a77fe505abfcff89382d8ebcf343eba349434cb3da47368d4592fce371e5be",
   "authoritative_scope": "read_only_structural_editorial_research_not_semantic_qualification",
@@ -42,7 +42,7 @@
           "section_id": "vocabulary",
           "heading": "Concepts, catégories et règles",
           "planned_template_id": "taxonomy-tree",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Hiérarchie et vocabulaire, avec distinction entre définition et application.",
           "source_artifact": "Kristal-Accounting/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -216,7 +216,7 @@
           "section_id": "events",
           "heading": "Événements et pièces justificatives",
           "planned_template_id": "event-document-chain",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Ne pas confondre la pièce justificative et l’événement économique.",
           "source_artifact": "Kristal-Accounting/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -452,7 +452,7 @@
           "section_id": "ledger",
           "heading": "Écritures, comptes, débits et crédits",
           "planned_template_id": "double-entry-ledger",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Associations écriture/compte et conservation de l’équilibre.",
           "source_artifact": "Kristal-Accounting/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -698,7 +698,7 @@
           "section_id": "periods",
           "heading": "Périodes, états et rapprochements",
           "planned_template_id": "period-rollup-matrix",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Agrégation et passage de période, pas une timeline gratuite.",
           "source_artifact": "Kristal-Accounting/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -773,7 +773,7 @@
           "section_id": "misc",
           "heading": "Interfaces et autres faits",
           "planned_template_id": "source-provenance-index",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Conserver les éléments non classés plutôt que les forcer dans une catégorie.",
           "source_artifact": "Kristal-Accounting/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -876,7 +876,7 @@
           "section_id": "mission",
           "heading": "Architecture de mission, phases et opérations",
           "planned_template_id": "mission-phase-map",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Mission et phases doivent rester liées à leurs contextes.",
           "source_artifact": "Kristal-Aerospace/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -1082,7 +1082,7 @@
           "section_id": "systems",
           "heading": "Véhicules, systèmes et ressources",
           "planned_template_id": "system-interface-map",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Maintenir la distinction entre configuration, système et ressource.",
           "source_artifact": "Kristal-Aerospace/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -1363,7 +1363,7 @@
           "section_id": "dynamics",
           "heading": "Trajectoires, environnement et mesures",
           "planned_template_id": "trajectory-constraints-map",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "La trajectoire dépend de contextes environnementaux et opérationnels.",
           "source_artifact": "Kristal-Aerospace/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -1623,7 +1623,7 @@
           "section_id": "boundary",
           "heading": "Interfaces et frontières du domaine",
           "planned_template_id": "boundary-relation-map",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Afficher les interfaces vers d’autres domaines sans assimilation.",
           "source_artifact": "Kristal-Aerospace/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -1742,7 +1742,7 @@
           "section_id": "classes",
           "heading": "Taxonomies transversales",
           "planned_template_id": "taxonomy-tree",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Rendre les is_a et spécialisations lisibles.",
           "source_artifact": "Kristal-Aerospace/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -1848,7 +1848,7 @@
           "section_id": "system",
           "heading": "Mécanismes et systèmes",
           "planned_template_id": "multiscale-relations-map",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Montrer les mécanismes à plusieurs échelles.",
           "source_artifact": "Kristal-Aging/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -2024,7 +2024,7 @@
           "section_id": "functional",
           "heading": "Fonction, réserve et compensation",
           "planned_template_id": "functional-trajectory-map",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Séparer fonction et réserve et leurs modulations.",
           "source_artifact": "Kristal-Aging/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -2113,7 +2113,7 @@
           "section_id": "measurement",
           "heading": "Mesures et indicateurs",
           "planned_template_id": "evidence-constraint-matrix",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Distinguer mesure, interprétation et incertitude.",
           "source_artifact": "Kristal-Aging/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -2163,7 +2163,7 @@
           "section_id": "trajectory",
           "heading": "Trajectoires observées",
           "planned_template_id": "functional-trajectory-map",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Courbes ou comparaisons de trajectoires si les données le permettent; aucune date inventée.",
           "source_artifact": "Kristal-Aging/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -2211,7 +2211,7 @@
           "section_id": "policy",
           "heading": "Limites, éthique et invariants",
           "planned_template_id": "source-provenance-index",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Rendre visibles précautions et politiques de lecture.",
           "source_artifact": "Kristal-Aging/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -2264,7 +2264,7 @@
           "section_id": "crossscale",
           "heading": "Nuances entre échelles et autres thèmes",
           "planned_template_id": "crossscale-distinctions-map",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Distinguer les faits qui ne relèvent pas d’une seule couche.",
           "source_artifact": "Kristal-Aging/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -2374,7 +2374,7 @@
           "section_id": "soil",
           "heading": "Sol",
           "planned_template_id": "agroecosystem-network",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Propriétés du sol et liens vers les autres éléments.",
           "source_artifact": "Kristal-Agriculture/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -2493,7 +2493,7 @@
           "section_id": "crop",
           "heading": "Organisme cultivé",
           "planned_template_id": "agroecosystem-network",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Cycles et physiologie de l’organisme; rester contextuel.",
           "source_artifact": "Kristal-Agriculture/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -2608,7 +2608,7 @@
           "section_id": "inputs",
           "heading": "Intrants",
           "planned_template_id": "inputs-practices-matrix",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Distinguer ressources, intrants et limites.",
           "source_artifact": "Kristal-Agriculture/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -2714,7 +2714,7 @@
           "section_id": "practices",
           "heading": "Pratiques",
           "planned_template_id": "practice-interface-map",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Relations pratiques–systèmes sans prescriptions automatiques.",
           "source_artifact": "Kristal-Agriculture/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -2845,7 +2845,7 @@
           "section_id": "yield",
           "heading": "Rendement",
           "planned_template_id": "evidence-constraint-matrix",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Résultats et facteurs de contexte, sans inférer une causalité.",
           "source_artifact": "Kristal-Agriculture/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -2947,7 +2947,7 @@
           "section_id": "cross",
           "heading": "Interfaces transversales",
           "planned_template_id": "relation-network",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Conserver les assertions sans axe de production.",
           "source_artifact": "Kristal-Agriculture/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -3058,7 +3058,7 @@
           "section_id": "data",
           "heading": "Données",
           "planned_template_id": "stage-interaction-network",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Les données sont une dimension reliée aux autres, non une étape datée.",
           "source_artifact": "Kristal-AI/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -3158,7 +3158,7 @@
           "section_id": "representation",
           "heading": "Représentation",
           "planned_template_id": "stage-interaction-network",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Les représentations participent aux interfaces avec les données et modèles.",
           "source_artifact": "Kristal-AI/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -3236,7 +3236,7 @@
           "section_id": "model",
           "heading": "Modèles",
           "planned_template_id": "taxonomy-tree",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "La partie contient des distinctions de modèles et leurs relations.",
           "source_artifact": "Kristal-AI/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -3333,7 +3333,7 @@
           "section_id": "learning",
           "heading": "Apprentissage",
           "planned_template_id": "process-interface-map",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Montrer les opérations et dépendances, pas une séquence d’enseignement.",
           "source_artifact": "Kristal-AI/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -3428,7 +3428,7 @@
           "section_id": "inference",
           "heading": "Inférence",
           "planned_template_id": "process-interface-map",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Distinguer la production et l’évaluation des sorties.",
           "source_artifact": "Kristal-AI/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -3512,7 +3512,7 @@
           "section_id": "evaluation",
           "heading": "Évaluation",
           "planned_template_id": "evidence-constraint-matrix",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Critères, métriques, limites et validation restent distincts.",
           "source_artifact": "Kristal-AI/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {
@@ -3603,7 +3603,7 @@
           "section_id": "crosscutting",
           "heading": "Propriétés transversales et rétroactions",
           "planned_template_id": "relation-network",
-          "template_status": "DESIGN_ONLY_NOT_RENDERABLE",
+          "template_status": "TYPED_LAYOUT_AVAILABLE_UNREALIZED",
           "editorial_intent": "Éviter de reléguer risques et contrôle à la fin d’un pipeline linéaire.",
           "source_artifact": "Kristal-AI/.kristal/v8/portable-state.kristal-state.json",
           "source_observation": {

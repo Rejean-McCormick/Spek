@@ -20,11 +20,11 @@ class WikiTemplatesTests(unittest.TestCase):
         kw.update(overrides)
         return build_wiki(**kw)
 
-    def test_registry_covers_all_19_arketype_profiles_and_8_native_spek_layouts(self):
+    def test_registry_covers_19_profiles_and_27_layouts(self):
         profiles=load_profiles(ROOT/'template_library/wiki/archetype-profiles.json')
         self.assertEqual(len(profiles),19)
         layouts={p.stem for p in (ROOT/'layouts').glob('*.json')}
-        self.assertEqual(len(layouts),8)
+        self.assertEqual(len(layouts),27)
         for profile in profiles.values():
             self.assertIn(profile['preferred_layout'],layouts)
             self.assertTrue(set(profile['allowed_layouts']) <=layouts)

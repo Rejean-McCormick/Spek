@@ -46,6 +46,33 @@ UI = {
  }
 }
 
+# Semantic roles for explicitly bound specialized editorial layouts.
+_SPECIALIZED_SLOTS = {
+ 'fr': {
+  'context':'Contexte','scope':'Périmètre','entities':'Entités','relations':'Relations','limits':'Limites',
+  'stages':'Étapes déclarées','links':'Liens déclarés','axes':'Axes','entries':'Entrées déclarées',
+  'period_context':'Période déclarée','accounts':'Comptes','reconciliations':'Rapprochements déclarés',
+  'concepts':'Concepts','specializations':'Relations de spécialisation',
+  'observations':'Observations','constraints':'Contraintes','sources':'Sources','attributions':'Attributions',
+ },
+ 'en': {
+  'context':'Context','scope':'Scope','entities':'Entities','relations':'Relations','limits':'Limits',
+  'stages':'Declared stages','links':'Declared links','axes':'Axes','entries':'Declared entries',
+  'period_context':'Declared period','accounts':'Accounts','reconciliations':'Declared reconciliations',
+  'concepts':'Concepts','specializations':'Specialization relations',
+  'observations':'Observations','constraints':'Constraints','sources':'Sources','attributions':'Attributions',
+ },
+ 'it': {
+  'context':'Contesto','scope':'Ambito','entities':'Entità','relations':'Relazioni','limits':'Limiti',
+  'stages':'Fasi dichiarate','links':'Collegamenti dichiarati','axes':'Assi','entries':'Registrazioni dichiarate',
+  'period_context':'Periodo dichiarato','accounts':'Conti','reconciliations':'Riconciliazioni dichiarate',
+  'concepts':'Concetti','specializations':'Relazioni di specializzazione',
+  'observations':'Osservazioni','constraints':'Vincoli','sources':'Fonti','attributions':'Attribuzioni',
+ },
+}
+for _lang,_labels in _SPECIALIZED_SLOTS.items():
+    UI[_lang].update(_labels)
+
 # Source explorer vocabulary is localized, but never implies certification.
 INSPECTOR_UI = {
  'fr': {

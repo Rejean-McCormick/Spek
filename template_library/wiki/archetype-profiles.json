@@ -134,7 +134,19 @@
       "allowed_layouts": [
         "comparison",
         "concept-card",
-        "evidence-comparison"
+        "evidence-comparison",
+        "mission-phase-map",
+        "system-interface-map",
+        "trajectory-constraints-map",
+        "boundary-relation-map",
+        "taxonomy-tree",
+        "agroecosystem-network",
+        "inputs-practices-matrix",
+        "practice-interface-map",
+        "evidence-constraint-matrix",
+        "relation-network",
+        "stage-interaction-network",
+        "process-interface-map"
       ],
       "integrity_rule": "Avoid collapsing relationships from different layers."
     },
@@ -164,7 +176,16 @@
       "preferred_layout": "concept-card",
       "allowed_layouts": [
         "concept-card",
-        "comparison"
+        "comparison",
+        "taxonomy-tree",
+        "event-document-chain",
+        "double-entry-ledger",
+        "period-rollup-matrix",
+        "source-provenance-index",
+        "multiscale-relations-map",
+        "functional-trajectory-map",
+        "evidence-constraint-matrix",
+        "crossscale-distinctions-map"
       ],
       "integrity_rule": "Distinguish assertions from instructional projections and record sources."
     },

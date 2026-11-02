@@ -21,11 +21,10 @@ def fixture(adapter='ekole'):
     return read_json(ROOT/'examples/education'/path)
 
 class EducationalInteroperability(unittest.TestCase):
-    def test_eight_layouts(self):
-        self.assertEqual(len(LAYOUTS),8)
-        self.assertEqual({x['id'] for x in LAYOUTS},
-          {'result-card','argument-map','comparison','concept-card','learning-path',
-           'evidence-comparison','observation-inference','chronology'})
+    def test_eight_original_layouts_retained_alongside_specialized_layouts(self):
+        self.assertEqual(len(LAYOUTS),27)
+        self.assertTrue({'result-card','argument-map','comparison','concept-card','learning-path',
+           'evidence-comparison','observation-inference','chronology'} <= {x['id'] for x in LAYOUTS})
 
     def test_ekole_five_layouts_three_languages_and_identity(self):
         source,realizations=import_educational(fixture(),'ekole')

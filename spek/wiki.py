@@ -17,6 +17,7 @@ from pathlib import Path
 
 from .core import ValidationError, compile_inputs, read_json
 from .document import SpekDocument, project_document
+from .locale import UI
 
 FORMAT = 'spek.wiki-draft/1.0'
 SLUG = re.compile(r'[a-z0-9](?:[a-z0-9-]{0,75}[a-z0-9])?\Z')
@@ -60,6 +61,13 @@ CAPTIONS = {
         'draft':'Bozza privata, pubblicazione non autorizzata','profile':'Archetipo','source':'Riferimento stato',
         'warning':'Questa è una proiezione derivata, non lo stato canonico.'}
 }
+
+# The Markdown Wiki consumes the same explicitly realized typed slots as HTML/TeX.
+for _lang in LABELS:
+    for _slot in ('entities','relations','stages','links','axes','entries','period_context',
+                  'accounts','reconciliations','scope','concepts','specializations',
+                  'constraints','sources','attributions'):
+        LABELS[_lang][_slot] = UI[_lang][_slot]
 
 def safe_md(value: str) -> str:
     """Escape supplied realizations as plain Markdown text, never raw HTML/links."""

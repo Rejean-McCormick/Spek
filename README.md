@@ -245,3 +245,16 @@ scripts/               safe wiki sync and repository setup assistance
 **Prototype 0.5 / experimental.** FR/EN/IT outputs and local tests are available. Live Konstellation integration in a deployed environment, native AI generation, real SemantiK RuntimeSet execution, JCS commitment verification, JATS/Crossref/DOI support, externally authenticated approval records, generalized layout rendering, and independent translation equivalence tests are **not implemented**. Do not infer those capabilities from the example.
 
 See [Roadmap](docs/ROADMAP.md). Contributions are welcome via the proposed [contribution guide](CONTRIBUTING.md); **no copyright license is granted by this repository unless the rights holder explicitly adds a license** (see [License decision](LICENSE-DECISION.md)).
+
+
+### Composition Wiki — inspection structurelle privée
+
+L’atelier peut explorer les sections AI prescrites des cinq Kristals étudiés, à partir des assertions et des positions de source vérifiées par empreinte brute ; aucune sélection pour publication ni réalisation SemantiK ne sont déduites. Voir [Atelier de composition structurelle](docs/ATELIER_COMPOSITION_STRUCTURELLE_PRIVEE_FR.md).
+
+Commande locale : `python -m spek preview-structure --kristal <dossier>` — produit uniquement une inspection HTML privée, non un brouillon publiable.
+
+
+Pour distinguer le **Wiki public des Kristals** du Wiki documentaire Spek, voir [Pipeline GitHub Wiki Kristal](docs/PIPELINE_KRISTAL_PUBLIC_GITHUB_WIKI_FR.md).
+
+
+Installation locale de cette version : [Guide de mise à jour de l’atelier](docs/INSTALLATION_ATELIER_SPECIALISE_V4_FR.md).

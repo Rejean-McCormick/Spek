@@ -163,6 +163,10 @@ class TemplateManagerApp(tk.Tk):
         self.verify_button.pack(side='right',padx=(6,0))
         self.preview_button=ttk.Button(bar,text='3) Prévisualiser en HTML',command=lambda:self.run_compiler(True))
         self.preview_button.pack(side='right')
+        privatebar=ttk.Frame(work);privatebar.pack(fill='x',pady=(7,0))
+        self.structural_preview_button=ttk.Button(privatebar,text='Explorer les assertions dans la composition (aperçu privé)',command=self.open_structural_preview)
+        self.structural_preview_button.pack(side='left')
+        ttk.Label(privatebar,text='Pour les 5 Kristals étudiés, si le fichier local correspond au snapshot.',foreground='#525c6a').pack(side='left',padx=(12,0))
         self.context_var=tk.StringVar(value='Commence par ouvrir soit un Kristal (pour voir sa composition prescrite), soit un article.json + realizations.json (pour voir le vrai rendu).')
         ttk.Label(work,textvariable=self.context_var,foreground='#525c6a',wraplength=1130).pack(anchor='w',pady=(7,2))
         ttk.Label(work,textvariable=self.next_steps_var,foreground='#344054',wraplength=1130,justify='left').pack(anchor='w',pady=(0,2))
@@ -177,7 +181,7 @@ class TemplateManagerApp(tk.Tk):
         ttk.Label(helper,text='B · Ouvrir un Kristal',font=('Segoe UI',10,'bold')).grid(row=0,column=1,sticky='w',padx=(0,10))
         ttk.Label(helper,text='Lecture seule : Spek montre l’identité, le modèle natif et la composition qui lui est assignée dans le registre. Spek ne devine rien.',wraplength=300,justify='left',foreground='#475467').grid(row=1,column=1,sticky='w',padx=(0,10))
         ttk.Label(helper,text='C · Voir le rendu final',font=('Segoe UI',10,'bold')).grid(row=0,column=2,sticky='w')
-        ttk.Label(helper,text='Pour prévisualiser une vraie page, ouvre un article.json et son fichier realizations.json, puis utilise Vérifier et Prévisualiser.',wraplength=300,justify='left',foreground='#475467').grid(row=1,column=2,sticky='w')
+        ttk.Label(helper,text='Un Kristal revu permet un aperçu privé de sa structure. Une vraie page exige article.json et realizations.json, puis Vérifier et Prévisualiser.',wraplength=300,justify='left',foreground='#475467').grid(row=1,column=2,sticky='w')
         ttk.Label(helper,textvariable=self.guide_var,foreground='#1d2939',wraplength=1120,justify='left').grid(row=2,column=0,columnspan=3,sticky='w',pady=(8,0))
 
         rootbar=ttk.LabelFrame(self,text='2) Dépôt Spek utilisé par l’atelier',padding=8)
@@ -295,7 +299,10 @@ class TemplateManagerApp(tk.Tk):
             '4. Si tu modifies un JSON : fais les changements dans l’onglet « Avancé · Éditeur JSON », puis clique sur « Enregistrer ».',
             '   - Spek crée une sauvegarde avant remplacement.',
             '',
-            '5. Rien n’est publié depuis cette fenêtre. Tout reste local tant que tu n’utilises pas le pipeline de publication séparé.'
+            '5. Avec un Kristal revu, « Explorer les assertions dans la composition » ouvre un HTML de contrôle, NON PUBLIABLE.',
+            '   - Aucune réalisation SemantiK n’est inventée. Pour un vrai Wiki, il faut le pipeline C1/C2/C3.',
+            '',
+            '6. Rien n’est publié depuis cette fenêtre. Tout reste local tant que tu n’utilises pas le pipeline de publication séparé.'
         ]
         if hasattr(self, 'guide_text'):
             self._set_readonly_text(self.guide_text, '\n'.join(guide))
@@ -313,7 +320,11 @@ class TemplateManagerApp(tk.Tk):
             if self.kristal_details.get('assignment'):
                 self.next_steps_var.set('Étapes suivantes : 1) clique sur « Voir la composition » ; 2) inspecte la recette assignée ; 3) quand tu auras un article.json + realizations.json correspondant, utilise « Ouvrir un article… » pour voir le rendu.')
             elif self.kristal_details.get('proposal'):
-                self.next_steps_var.set('Étapes suivantes : ouvre « Voir la composition » pour consulter les sections proposées par l’IA. Elles attendent la vérification des sources avant une vraie prévisualisation.')
+                if (self.kristal_details.get('structure_review')
+                        and self.kristal_details.get('source_snapshot_comparison') == 'MATCHES_UPLOADED_SNAPSHOT'):
+                    self.next_steps_var.set('Étape suivante : « Explorer les assertions dans la composition » ouvre la vue structurelle PRIVÉE (pas une page Wiki publiée).')
+                else:
+                    self.next_steps_var.set('Étapes suivantes : consulte « Voir la composition ». L’exploration des sources exige une revue détaillée et un snapshot identique.')
             else:
                 self.next_steps_var.set('Étapes suivantes : ce Kristal n’a pas encore de composition proposée. Le registre ne contient aucune correspondance.')
             return
@@ -326,6 +337,10 @@ class TemplateManagerApp(tk.Tk):
         self.preview_button.configure(state=state)
         recipe_state = 'normal' if (self.kristal_details and (self.kristal_details.get('assignment') or self.kristal_details.get('proposal')) and not self.preview_busy) else 'disabled'
         self.goto_recipe_button.configure(state=recipe_state)
+        can_audit = bool(self.kristal_details and self.kristal_details.get('structure_review')
+                         and self.kristal_details.get('source_snapshot_comparison') == 'MATCHES_UPLOADED_SNAPSHOT'
+                         and not self.preview_busy)
+        self.structural_preview_button.configure(state='normal' if can_audit else 'disabled')
         for control in (self.open_article_button,self.open_kristal_button,self.change_root_button):
             control.configure(state='disabled' if self.preview_busy else 'normal')
         self._refresh_next_steps()
@@ -394,6 +409,38 @@ class TemplateManagerApp(tk.Tk):
             self._status('Métadonnées Kristal ouvertes ; aucune projection générée')
             self._update_buttons();self._show_workspace();self._refresh_guide()
         except (ValueError,OSError,ValidationError) as e:self._error('Lecture Kristal',e)
+
+    def open_structural_preview(self):
+        if (self.preview_busy or not self.kristal_details
+                or not self.kristal_details.get('structure_review')
+                or self.kristal_details.get('source_snapshot_comparison') != 'MATCHES_UPLOADED_SNAPSHOT'):
+            messagebox.showinfo('Spek · inspection',
+                'Cet aperçu privé nécessite une revue structurelle explicite et un fichier source identique au snapshot étudié.',parent=self)
+            return
+        from spek.structural_preview import create_structural_preview
+        folder=Path(self.kristal_details['folder'])
+        root=self.root_folder
+        self.preview_busy=True
+        self._update_buttons()
+        self._status('Préparation de l’inspection structurelle PRIVÉE…')
+        def worker():
+            try:
+                result=create_structural_preview(root,folder)
+            except Exception as exc:
+                self.after(0, lambda err=str(exc):self._structural_preview_done(None,err))
+            else:
+                self.after(0, lambda res=result:self._structural_preview_done(res,None))
+        threading.Thread(target=worker,daemon=True).start()
+
+    def _structural_preview_done(self, result, error):
+        self.preview_busy=False
+        self._update_buttons()
+        if error:
+            self._status('Aperçu refusé : '+str(error)[:160])
+            messagebox.showerror('Spek · aperçu structurel impossible',str(error),parent=self)
+            return
+        self._status('Inspection structurelle locale disponible : NON PUBLIABLE · '+str(result['directory']))
+        webbrowser.open(Path(result['page']).as_uri())
 
     def run_compiler(self,build:bool):
         if self.preview_busy or not self.article_path or not self.realizations_path:return
@@ -615,7 +662,7 @@ class TemplateManagerApp(tk.Tk):
                                 rev=obj['structure_review']
                                 self._preview_card('Étude canonique disponible',f'{rev["source"]["assertion_occurrences"]} occurrences d’assertions v8 inspectées. Comparaison de l’état local : '+obj['source_snapshot_comparison'])
                                 for section in rev['ordered_structural_sections']:
-                                    self._preview_card(section['heading'],f'{section["source_observation"]["observed_assertion_occurrences"]} occurrences · Gabarit à développer : {section["planned_template_id"]}')
+                                    self._preview_card(section['heading'],f'{section["source_observation"]["observed_assertion_occurrences"]} occurrences · Gabarit : {section["planned_template_id"]} · aperçu structurel privé si empreinte identique · layout typé exécutable si contenu SemantiK fourni')
                             self._preview_card('Important','Étude IA non approuvée. Aucune assertion n’est sélectionnée pour publier. L’aperçu HTML nécessite un article et des réalisations SemantiK explicites.')
                         else:
                             self._preview_card('Aucune proposition IA', 'Le registre ne contient pas de composition pour ce Kristal.')
@@ -646,14 +693,14 @@ class TemplateManagerApp(tk.Tk):
                             self._preview_card('Revue structurelle invalide',str(exc))
                         if review:
                             self._preview_card('Source étudiée',f'{review["source"]["assertion_occurrences"]} occurrences v8 · fichier : {review["source"]["portable_state_relative_path"]} · empreinte brute du snapshot (non qualifiée)')
-                            self._preview_line('Plan documentaire spécifique au Kristal · layouts spécialisés encore à développer','sub')
+                            self._preview_line('Plan IA du Kristal · layouts spécialisés typés disponibles, contenu SemantiK à fournir','sub')
                             for n,sec in enumerate(review['ordered_structural_sections'],1):
-                                self._preview_card(f'{n}. {sec["heading"]}',f'{sec["source_observation"]["observed_assertion_occurrences"]} assertions inspectées · {sec["planned_template_id"]} · NON IMPLÉMENTÉ')
+                                self._preview_card(f'{n}. {sec["heading"]}',f'{sec["source_observation"]["observed_assertion_occurrences"]} assertions inspectées · {sec["planned_template_id"]} · LAYOUT TYPÉ DISPONIBLE · À REMPLIR PAR SEMANTIK')
                             for risk in review['exclusions_and_risks']:
                                 self._preview_card('Erreur de lecture à éviter',risk)
                     else:
                         self._preview_card('Analyse détaillée en attente','Le rapport Manager ne contient pas encore le graphe canonique de ce Kristal.')
-                    self._preview_card('Non publiable','Les sections spécialisées ci-dessus sont des spécifications. Les assertions n’ont pas été sélectionnées, les contrats de rendu ne sont pas implémentés et les autorisations restent à obtenir.')
+                    self._preview_card('Non publiable','Les 19 layouts spécialisés sont exécutables avec un article Spek explicite et des réalisations SemantiK fournies. L’aperçu structurel est privé et n’approuve aucune assertion ni publication.')
                     return
                 if kind=='recipe':
                     recipe=self.registry['compositions'][key[1]]

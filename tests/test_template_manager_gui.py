@@ -29,7 +29,7 @@ class TemplateManagerTests(unittest.TestCase):
     def test_inventory_existing_categories_and_wiki(self):
         x=template_inventory(self.root)
         self.assertEqual(len(x['categories']),5)
-        self.assertEqual(len(x['layouts']),8)
+        self.assertEqual(len(x['layouts']),27)
         self.assertEqual(len(x['profiles']),19)
 
     def test_reserved_category_and_draft(self):

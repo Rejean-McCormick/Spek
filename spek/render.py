@@ -8,6 +8,7 @@ from .core import Compiled, ValidationError, escape_tex
 from .document import SpekDocument, DocumentItem, DocumentSection, project_document
 from .locale import UI
 from .inspector import card_inspector
+from .specialized_layouts import SPECIALIZED_FAMILIES, SPECIALIZED_SLOT_ORDER
 
 CSS = '''
 :root{--ink:#1b2937;--muted:#5e7080;--paper:#f6f7f9;--line:#d9e0e7;--accent:#215d8e;--soft:#edf3f7;--amber:#95600b}
@@ -85,7 +86,7 @@ def _slot_html(section: DocumentSection, slot: str, doc: SpekDocument, css_class
     if not items:
         return ''
     return (f'<div class="{css_class}" data-slot="{html.escape(slot)}">'
-            f'<span class="block-label">{html.escape(UI[doc.language][slot])}</span>'
+            f'<span class="block-label">{html.escape(UI[doc.language].get(slot,slot.replace("_"," ").capitalize()))}</span>'
             + ''.join(_unit_html(item) for item in items)
             + card_inspector(items, doc, slot=slot) + '</div>')
 
@@ -93,7 +94,7 @@ def _slot_html(section: DocumentSection, slot: str, doc: SpekDocument, css_class
 def section_html(doc: SpekDocument, sec: DocumentSection) -> str:
     l = sec.layout; t = UI[doc.language]
     top=(f'<section class="panel" id="{html.escape(sec.id, quote=True)}">'
-         f'<div class="section-head"><span class="label">{html.escape(t[l])} · {html.escape(l)} v{html.escape(sec.layout_version)}</span>'
+         f'<div class="section-head"><span class="label">{html.escape(t.get(l,l.replace("-"," ").capitalize()))} · {html.escape(l)} v{html.escape(sec.layout_version)}</span>'
          f'<h2>{html.escape(sec.heading)}</h2></div><div class="content">')
     if l=='result-card':
         body=(_slot_html(sec,'claim',doc,'highlight')
@@ -132,6 +133,21 @@ def section_html(doc: SpekDocument, sec: DocumentSection) -> str:
         body=(_slot_html(sec,'context',doc,'highlight')
               +'<div class="timeline">'+_slot_html(sec,'events',doc)+'</div>'
               +'<div class="grid">'+_slot_html(sec,'interpretation',doc)+_slot_html(sec,'limits',doc)+'</div>')
+    elif l in SPECIALIZED_FAMILIES:
+        family = SPECIALIZED_FAMILIES[l]
+        names = SPECIALIZED_SLOT_ORDER[family]
+        # Every displayed text item originates from a typed, explicitly bound
+        # SemantiK realization. Display doesn't derive edges, hierarchy,
+        # accounting equality, dates, evidence or causal conclusions.
+        lead = _slot_html(sec,names[0],doc,'highlight')
+        parts = [_slot_html(sec,slot,doc) for slot in names[1:]]
+        if family in ('chain','trajectory'):
+            body = lead + '<div class="learning-steps">'+''.join(parts[:-1])+'</div>' + parts[-1]
+        elif family == 'ledger':
+            warn = {'fr':'Écritures présentées sans validation d’équilibrage.','en':'Entries displayed without balance validation.','it':'Registrazioni mostrate senza verifica del bilancio.'}[doc.language]
+            body = lead + '<p class="badge">'+html.escape(warn)+'</p><div class="grid">'+''.join(parts)+'</div>'
+        else:
+            body = lead + '<div class="grid">'+''.join(parts)+'</div>'
     else:
         raise ValidationError('Unknown renderer: '+l)
     return top+body+'</div></section>'
@@ -210,16 +226,16 @@ def article_tex(m: Compiled, lang: str) -> str:
         return r'\par\smallskip '.join(escape_tex(i.text)+r'\par{\scriptsize\ttfamily '+escape_tex(i.trace())+r'}'
                     for i in sec.items(slot))
     def sl(sec,name):
-        return r'\spekSlot{'+escape_tex(t[name])+'}{'+body(sec,name)+'}' if sec.items(name) else ''
+        return r'\spekSlot{'+escape_tex(t.get(name,name.replace('_',' ').capitalize()))+'}{'+body(sec,name)+'}' if sec.items(name) else ''
     def featured(sec,name):
-        return r'\spekFeatured{'+escape_tex(t[name])+'}{'+body(sec,name)+'}' if sec.items(name) else ''
+        return r'\spekFeatured{'+escape_tex(t.get(name,name.replace('_',' ').capitalize()))+'}{'+body(sec,name)+'}' if sec.items(name) else ''
     def pair(sec,a,b):
         return (r'\noindent\begin{minipage}[t]{.48\linewidth}'+sl(sec,a)+r'\end{minipage}\hfill'
                +r'\begin{minipage}[t]{.48\linewidth}'+sl(sec,b)+r'\end{minipage}\par\bigskip')
     content=[]
     for sec in doc.sections:
         content.append(r'\section{'+escape_tex(sec.heading)+'}')
-        content.append(r'\textit{'+escape_tex(t[sec.layout])+'}'+ '\n')
+        content.append(r'\textit{'+escape_tex(t.get(sec.layout,sec.layout.replace('-',' ').capitalize()))+'}'+ '\n')
         content.append('% spek-section-id: '+sec.id+'\n')
         if sec.layout=='result-card':
             content.extend([featured(sec,'claim'),pair(sec,'conditions','evidence'),pair(sec,'uncertainty','implications')])
@@ -237,6 +253,10 @@ def article_tex(m: Compiled, lang: str) -> str:
             content.extend([featured(sec,'observations'),pair(sec,'interpretation','verification'),sl(sec,'limits')])
         elif sec.layout=='chronology':
             content.extend([featured(sec,'context'),sl(sec,'events'),pair(sec,'interpretation','limits')])
+        elif sec.layout in SPECIALIZED_FAMILIES:
+            names = SPECIALIZED_SLOT_ORDER[SPECIALIZED_FAMILIES[sec.layout]]
+            content.append(featured(sec,names[0]))
+            content.extend(sl(sec,name) for name in names[1:])
     banner = (r'\noindent\fbox{\parbox{0.95\textwidth}{\textbf{'+escape_tex(t['demo'])+'}}}'+'\n') if doc.demonstration else ''
     preamble=[r'\documentclass[11pt,a4paper]{article}',r'\usepackage{fontspec}',
         # Portable across Linux / Windows, without bundling proprietary fonts.
@@ -300,9 +320,9 @@ def article_pdf(m: Compiled, lang: str, path: Path) -> None:
     needed=[docmodel.title,docmodel.subtitle,docmodel.abstract,t['abstract'],t['trace'],
             t['demo'] if docmodel.demonstration else '',t['source_checked'],t['source_unchecked']]
     for sec in docmodel.sections:
-        needed.extend([sec.heading,t[sec.layout]])
+        needed.extend([sec.heading,t.get(sec.layout,sec.layout.replace('-',' ').capitalize())])
         for slot,items in sec.slots.items():
-            if items:needed.append(t[slot])
+            if items:needed.append(t.get(slot,slot.replace('_',' ').capitalize()))
             needed.extend(i.text+' '+i.trace() for i in items)
     for font_name in ('SpekUnicode','SpekUnicodeBold'):
         face=pdfmetrics.getFont(font_name).face
@@ -386,6 +406,10 @@ def article_pdf(m: Compiled, lang: str, path: Path) -> None:
         elif sec.layout=='chronology':
             story.extend([box(sec.items('context'),t['context'],pale),Spacer(1,5),
                           box(sec.items('events'),t['events']),paired(sec,'interpretation','limits')])
+        elif sec.layout in SPECIALIZED_FAMILIES:
+            for n, slot in enumerate(SPECIALIZED_SLOT_ORDER[SPECIALIZED_FAMILIES[sec.layout]]):
+                if sec.items(slot):
+                    story.extend([box(sec.items(slot),t.get(slot,slot.replace('_',' ').capitalize()),pale if n==0 else colors.white),Spacer(1,5)])
         story.append(Spacer(1,7))
     # Trace block may not break into an orphan page with only hashes.
     meta=[para(t['trace'],'minor'),

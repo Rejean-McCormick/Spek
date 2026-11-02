@@ -46,3 +46,8 @@ Une section est **conditionnelle** : elle apparaît seulement si ses unités ont
 
 - `arketype_Code_snapshot(7).zip` SHA-256 `cc54bd3a8d96497168f49cdbe06faa223c51831c673ffad4f614fb4951ce01de`
 - `SPEK_REPO_COMPLET_GESTIONNAIRE_REPARE_2026-11-01.zip` SHA-256 `7523374d26008807d7d5373b2de3b6968e833551281fd48564577e761ec2494c`
+
+
+## Ajout du moteur spécialisé
+
+Depuis la révision de novembre 2026, **19 layouts typés spécialisés** s’ajoutent aux huit layouts initiaux dans `layouts/`. Les 19 compositions génériques décrites ci-dessus restent fondées sur les huit layouts historiques, tandis que les cinq revues IA approfondies utilisent les nouveaux layouts. L’atelier peut afficher des assertions sources en inspection privée ; les rendus éditoriaux des layouts spécialisés nécessitent toujours des unités sélectionnées et des réalisations explicites. Voir [Atelier structurel privé](ATELIER_COMPOSITION_STRUCTURELLE_PRIVEE_FR.md).

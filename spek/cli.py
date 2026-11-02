@@ -207,6 +207,9 @@ def main(argv=None):
     wb.add_argument('--out',required=True,help='New private destination directory, never a Git checkout')
     wb.add_argument('--state-snapshot',help='Required for a real v9 pinned Kristal state')
     wb.add_argument('--demonstration',action='store_true',help='Only for fixture previews, never a publication authorization')
+    audit=sub.add_parser('preview-structure',help='Render a PRIVATE audit of explicit IA sections, using the exact reviewed Kristal v8 file')
+    audit.add_argument('--kristal',required=True,help='Local Kristal workspace containing kristal.workspace.json')
+    audit.add_argument('--out',help='New private destination directory outside Spek and outside Kristal; omitted = temporary')
     wv=sub.add_parser('verify-wiki',help='Verify the SHA-256 inventory of a private draft')
     wv.add_argument('path')
     sub.add_parser('list-wiki-compositions',help='List explicit AI editorial wiki recipes; never assign them')
@@ -230,6 +233,11 @@ def main(argv=None):
                 out=Path(args.out),demonstration=args.demonstration,
                 state_snapshot=Path(args.state_snapshot) if args.state_snapshot else None)
             print('PRIVATE WIKI DRAFT: '+str(args.out)+' | '+', '.join(manifest['files']))
+        elif args.command=='preview-structure':
+            from .structural_preview import create_structural_preview
+            result=create_structural_preview(ROOT,Path(args.kristal),
+                output=Path(args.out) if args.out else None)
+            print('PRIVATE STRUCTURAL AUDIT — NOT PUBLISHABLE: '+result['page'])
         elif args.command=='verify-wiki':
             manifest=verify_wiki(Path(args.path))
             print('WIKI VERIFIED: '+str(len(manifest['files']))+' Markdown files (NOT publication approval)')

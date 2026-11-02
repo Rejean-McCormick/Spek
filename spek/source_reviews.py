@@ -41,7 +41,7 @@ def read_source_reviews(root: Path, proposals: dict) -> dict:
         total = source.get('assertion_occurrences')
         positions = []
         for section in entry.get('ordered_structural_sections',[]):
-            if section.get('publication_status') != 'NOT_AUTHORIZED' or section.get('selection_status') != 'NOT_SELECTED' or section.get('template_status') != 'DESIGN_ONLY_NOT_RENDERABLE':
+            if section.get('publication_status') != 'NOT_AUTHORIZED' or section.get('selection_status') != 'NOT_SELECTED' or section.get('template_status') != 'TYPED_LAYOUT_AVAILABLE_UNREALIZED':
                 raise ValidationError('Section de revue non autorisée : '+slug)
             observed = section.get('source_observation',{})
             group = observed.get('source_positions_zero_based')
