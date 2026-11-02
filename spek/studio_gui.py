@@ -32,6 +32,18 @@ BORDER = '#d4e6e1'
 AMBER = '#936b24'
 
 
+def initial_window_size(screen_width: int, screen_height: int) -> tuple[int, int]:
+    """Keep the whole window visible on a small Windows desktop.
+
+    Screen dimensions are display measurements, not application content.  The
+    workspace itself can scroll; there is no reason to open wider than the
+    monitor (the former 1270px fixed geometry hid the right-side controls).
+    """
+    width = min(1270, max(620, int(screen_width) - 48))
+    height = min(820, max(500, int(screen_height) - 90))
+    return width, height
+
+
 class ScrollPage(ttk.Frame):
     """Simple accessible scrolling region; width follows the notebook tab."""
     def __init__(self, parent):
@@ -57,8 +69,9 @@ class StudioApp(tk.Tk):
         super().__init__()
         self.root_folder = Path(root).resolve()
         self.title('Spek — Atelier de composition')
-        self.geometry('1270x820')
-        self.minsize(870, 590)
+        width, height = initial_window_size(self.winfo_screenwidth(), self.winfo_screenheight())
+        self.geometry(f'{width}x{height}')
+        self.minsize(min(820, width), min(550, height))
         self.configure(background=BG)
         self.registry = read_registry(self.root_folder)
         self.proposals = read_proposals(self.root_folder, self.registry)
@@ -144,7 +157,8 @@ class StudioApp(tk.Tk):
         ttk.Label(toolbar, textvariable=self.status_top, style='Small.TLabel').pack(side='right')
 
         outer = ttk.Panedwindow(self, orient='horizontal')
-        outer.pack(fill='both', expand=True, padx=16, pady=(0, 8))
+        self.workspace_pane = outer
+        outer.pack(fill='both', expand=True, padx=12, pady=(0, 8))
         left = ttk.Frame(outer, padding=(9, 12))
         outer.add(left, weight=1)
         ttk.Label(left, text='EXPLORER LES KRISTALS', style='Accent.TLabel').pack(anchor='w', pady=(0, 6))
@@ -179,8 +193,10 @@ class StudioApp(tk.Tk):
         ttk.Label(right, textvariable=self.workspace_heading,
                   style='Title.TLabel', wraplength=780).pack(anchor='w', padx=(12, 6), pady=(6, 1))
         self.workspace_sub = tk.StringVar(value='Les propositions sont disponibles même sans ouvrir les sources locales.')
-        ttk.Label(right, textvariable=self.workspace_sub, style='Muted.TLabel',
-                  wraplength=800).pack(anchor='w', padx=(12, 6), pady=(0, 10))
+        sub_label = ttk.Label(right, textvariable=self.workspace_sub, style='Muted.TLabel',
+                              wraplength=540, justify='left')
+        sub_label.pack(anchor='w', padx=(12, 6), pady=(0, 10), fill='x')
+        right.bind('<Configure>', lambda e: sub_label.configure(wraplength=max(240, e.width - 35)), add='+')
         self.tabs = ttk.Notebook(right)
         self.tabs.pack(fill='both', expand=True)
         self.pages = [ScrollPage(self.tabs) for _ in range(4)]
@@ -192,6 +208,16 @@ class StudioApp(tk.Tk):
         foot.pack(fill='x')
         self.feedback = tk.StringVar(value='Prêt · Travail local, aucune publication')
         ttk.Label(foot, textvariable=self.feedback, style='Small.TLabel').pack(anchor='w')
+        self.after_idle(self._fit_sidebar)
+
+    def _fit_sidebar(self):
+        """Prioritize the active workspace rather than an oversized catalog."""
+        try:
+            width = self.workspace_pane.winfo_width()
+            if width > 100:
+                self.workspace_pane.sashpos(0, min(320, max(260, width // 3)))
+        except (tk.TclError, AttributeError):
+            pass
 
     def _refresh_catalog(self):
         self._catalog_keys = filter_catalog(self.proposals, self.search_var.get())
@@ -264,8 +290,11 @@ class StudioApp(tk.Tk):
     def _heading(self, parent, title: str, subtitle: str | None = None):
         ttk.Label(parent, text=title, style='Section.TLabel').pack(anchor='w', pady=(0, 5))
         if subtitle:
-            ttk.Label(parent, text=subtitle, foreground=MUTED, wraplength=780,
-                      justify='left').pack(anchor='w', pady=(0, 15))
+            # The section body is recreated on each selection.  Do not bind
+            # its resize event to a soon-to-be-destroyed label: otherwise
+            # Tkinter calls a stale widget when the next Kristal is selected.
+            ttk.Label(parent, text=subtitle, foreground=MUTED,
+                      wraplength=495, justify='left').pack(anchor='w', fill='x', pady=(0, 15))
 
     def _card(self, parent, title: str, description: str, *, tone: str = 'regular'):
         wrap = tk.Frame(parent, bg=WHITE, highlightbackground=BORDER, highlightthickness=1)
@@ -377,11 +406,21 @@ class StudioApp(tk.Tk):
                    tone='good' if m['source_verified'] else 'regular')
         row = ttk.Frame(body)
         row.pack(fill='x', pady=(0, 17))
-        self.private_preview_btn = self._button(row, 'Voir le plan privé', self.explore_selected_structure,
-                            primary=True, enabled=structural_enabled)
-        if not structural_enabled:
-            self._button(row, 'Ouvrir un dossier…' if self.locals_root else 'Choisir locals…',
-                         self.open_kristal if self.locals_root else self.choose_locals_root)
+        if structural_enabled:
+            self.private_preview_btn = self._button(
+                row, 'Explorer la structure privée', self.explore_selected_structure, primary=True)
+        else:
+            # For the 122 Kristals without a detailed canonical review, a
+            # disabled structural-preview button was misleading. Their plans
+            # remain available in the Composition tab, but source inspection
+            # cannot be represented as a verified structural review.
+            self.private_preview_btn = None
+            self._button(row, 'Voir le plan proposé', lambda: self.tabs.select(1), primary=True)
+            if self.local_candidate:
+                self._button(row, 'Ouvrir les sources trouvées', self.open_selected_sources)
+            else:
+                self._button(row, 'Choisir le dossier local…' if self.locals_root else 'Configurer locals…',
+                             self.open_kristal if self.locals_root else self.choose_locals_root)
 
         ready = bool(self.article_path and self.realizations_path)
         self._card(body, '2 · Réaliser les phrases avec SemantiK',

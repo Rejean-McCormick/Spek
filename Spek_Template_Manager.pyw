@@ -91,6 +91,33 @@ def _find_repo():
         chooser.destroy()
 
 
+# Ces fichiers font partie de l'atelier de composition actuel.
+# Verifier leur presence AVANT les imports pour distinguer un correctif partiel
+# d'un probleme SemantiK, Python ou du Kristal charge.
+_REQUIRED_STUDIO_MODULES = (
+    'core', 'kristal_identity', 'local_kristals',
+    'studio_gui', 'studio_view_model', 'studio_workflow',
+    'ai_proposals', 'composition_registry', 'source_reviews',
+    'structural_preview', 'semantik_execution', 'semantik_transfer',
+    'template_manager', 'template_library', 'branding',
+)
+
+
+def _verify_startup_files(repository):
+    pkg = Path(repository) / 'spek'
+    missing = [name for name in _REQUIRED_STUDIO_MODULES
+               if not (pkg / (name + '.py')).is_file()]
+    if missing:
+        paths = ', '.join('spek/' + name + '.py' for name in missing)
+        raise RuntimeError(
+            'Installation Spek incomplete : module(s) absent(s) : ' + paths + '\n\n'
+            'Le correctif SemantiK precedent ne contenait pas toutes les dependances.\n'
+            'Solution : extrais le correctif de reparation dans le dossier PARENT '
+            'de Spek, puis relance START_SPEK.bat.\n\n'
+            'Depot inspecte : ' + str(repository))
+    return True
+
+
 def _load_spek(repository):
     # Import retarde : un lanceur place dans Telechargements peut localiser le depot d'abord.
     # Eviter de charger un autre module spek d'une installation Python deja presente.
@@ -987,6 +1014,7 @@ def main():
         if sys.version_info < (3, 10):
             raise RuntimeError('Spek exige Python 3.10 ou plus recent. Version detectee : ' + sys.version.split()[0])
         ROOT = _find_repo()
+        _verify_startup_files(ROOT)
         _load_spek(ROOT)
         if '--diagnostic' in sys.argv:
             inv = template_inventory(ROOT)
