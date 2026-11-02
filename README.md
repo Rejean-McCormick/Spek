@@ -258,3 +258,14 @@ Pour distinguer le **Wiki public des Kristals** du Wiki documentaire Spek, voir 
 
 
 Installation locale de cette version : [Guide de mise à jour de l’atelier](docs/INSTALLATION_ATELIER_SPECIALISE_V4_FR.md).
+
+**SemantiK Architect (import contrôlé, non publiable) :** [guide de transfert local explicite](docs/INTEGRATION_SEMANTIK_2026-11-02_FR.md).
+
+### Identité visuelle et confidentialité des aperçus (2026-11-02)
+
+La version actuelle de l'atelier utilise le logo SVG fourni et la couleur principale
+`#1E6864`. L'aperçu structurel privé et les documents de lecture n'affichent plus
+les empreintes de fichiers sources ; les contrôles d'intégrité restent effectués
+avant la création des aperçus. Les relations structurelles demeurent privées et
+ne sont pas destinées à la publication. Voir
+`docs/IDENTITE_VISUELLE_CONFIDENTIALITE_2026-11-02_FR.md`.

@@ -9,12 +9,13 @@ from .document import SpekDocument, DocumentItem, DocumentSection, project_docum
 from .locale import UI
 from .inspector import card_inspector
 from .specialized_layouts import SPECIALIZED_FAMILIES, SPECIALIZED_SLOT_ORDER
+from .branding import logo_svg, BRAND
 
 CSS = '''
-:root{--ink:#1b2937;--muted:#5e7080;--paper:#f6f7f9;--line:#d9e0e7;--accent:#215d8e;--soft:#edf3f7;--amber:#95600b}
+:root{--ink:#1b2937;--muted:#5e7080;--paper:#f6f7f9;--line:#d9e0e7;--accent:#1e6864;--soft:#e4f2ef;--amber:#95600b}
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.58}
 .wrapper{max-width:1030px;margin:auto;padding:34px 26px 90px}header{padding:22px 0 26px;border-bottom:2px solid var(--ink)}
-nav{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;font-size:.83rem;color:var(--muted)}nav a{color:var(--accent);text-decoration:none;padding:6px 9px;border-radius:6px}nav a[aria-current]{background:#e1edf6;font-weight:700}
+.spek-brand{display:inline-flex;align-items:center;gap:10px;font-size:1.05rem;color:var(--accent)}.spek-brand .brand-mark{width:62px;height:30px}nav{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;font-size:.83rem;color:var(--muted)}nav a{color:var(--accent);text-decoration:none;padding:6px 9px;border-radius:6px}nav a[aria-current]{background:#e4f2ef;font-weight:700}
 .eyebrow{color:var(--accent);text-transform:uppercase;letter-spacing:.15em;font-weight:750;font-size:.76rem}
 h1{font-family:Georgia,serif;font-size:clamp(2rem,4.1vw,3.5rem);line-height:1.16;letter-spacing:-.025em;margin:20px 0 12px;max-width:830px}
 .subtitle{font-size:1.13rem;color:var(--muted);max-width:760px}.warning{display:inline-block;background:#fff1d1;border:1px solid #edcb8b;color:#744700;padding:7px 10px;border-radius:4px;font-weight:750;font-size:.73rem;letter-spacing:.04em}
@@ -30,12 +31,12 @@ footer{border-top:1px solid var(--line);padding-top:25px;margin-top:50px;color:v
 @media(max-width:670px){.wrapper{padding:15px 14px 50px}.content,.section-head{padding:17px}.grid,.compare{grid-template-columns:1fr}.compare>div+div{border-left:none;border-top:1px solid var(--line)}.path{flex-direction:column}.connector{transform:rotate(90deg)}.toc a{display:block;margin:7px 0}}
 .unit+.unit{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}.exports{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.exports a{font-size:.85rem;display:inline-block;color:var(--accent);padding:7px 11px;border:1px solid var(--line);border-radius:6px;background:white;text-decoration:none} .highlight .ref{padding-top:4px} .tile .block-label{margin-bottom:8px}
 
-.source-navigation{display:inline-flex;padding:7px 10px;margin:6px 0 14px;color:#125581;border:1px solid #b6cfe4;border-radius:5px;font-size:.8rem;font-weight:700;text-decoration:none}.source-navigation:hover{background:#e3f1f9}
+.source-navigation{display:inline-flex;padding:7px 10px;margin:6px 0 14px;color:#1e6864;border:1px solid #9ccbc3;border-radius:5px;font-size:.8rem;font-weight:700;text-decoration:none}.source-navigation:hover{background:#e4f2ef}
 /* Per-card offline Source Explorer: HTML details/summary works without JS. */
 .source-inspector{border-top:1px solid var(--line);margin-top:14px;padding-top:10px}
 .source-trigger{cursor:pointer;color:var(--accent);font-weight:750;font-size:.82rem;list-style:none;display:flex;align-items:center;gap:8px;padding:7px 6px;border-radius:6px;max-width:max-content}
 .source-trigger::-webkit-details-marker{display:none}
-.source-trigger:hover{background:#dcebf5}.source-trigger:focus-visible{outline:3px solid #236a9e;outline-offset:3px}
+.source-trigger:hover{background:#e4f2ef}.source-trigger:focus-visible{outline:3px solid #1e6864;outline-offset:3px}
 .source-trigger-caret{margin-left:5px;transition:transform .15s}.source-inspector[open] .source-trigger-caret{transform:rotate(180deg)}
 .source-panel{background:#f8fafc;border:1px solid var(--line);border-radius:8px;margin-top:10px;padding:16px;min-width:0}
 .source-record+.source-record{border-top:2px solid var(--line);margin-top:18px;padding-top:18px}
@@ -197,24 +198,24 @@ def article_html(m: Compiled, lang: str, formats=('html','pdf','tex')) -> str:
 })();
 </script>"""
     return f'''<!doctype html><html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{html.escape(doc.title)}</title><meta name="description" content="{html.escape(doc.abstract, quote=True)}"><style>{CSS}</style></head>
-<body><main class="wrapper"><nav><span>SPEK · 0.5</span><div aria-label="{html.escape(t['lang'])}">{langs}</div></nav>
+<body><main class="wrapper"><nav><span class="spek-brand">{logo_svg()} <strong>SPEK</strong></span><div aria-label="{html.escape(t['lang'])}">{langs}</div></nav>
 <header><span class="eyebrow">{html.escape(t['eyebrow'])}</span><h1>{html.escape(doc.title)}</h1><p class="subtitle">{html.escape(doc.subtitle)}</p>{warn}{exports}</header>
 <div class="abstract"><h2>{html.escape(t['abstract'])}</h2><p>{html.escape(doc.abstract)}</p></div>
 <div class="toc"><strong>{html.escape(t['contents'])}</strong>{toc}</div>
 {sections}
-<footer><strong>{html.escape(t['trace'])}</strong><p>{html.escape(t['source_status'])}: {html.escape(status)}. {html.escape(t['evidence_notice'])}</p><p class="foot-id">{html.escape(t['source'])}: {html.escape(doc.source_sha256)} · {html.escape(t['realizations'])}: {html.escape(doc.realizations_sha256)} · {html.escape(t['layouts'])}: {html.escape(doc.layouts_sha256)}</p></footer>
+<footer><strong>{html.escape(t['trace'])}</strong><p>{html.escape(t['source_status'])}: {html.escape(status)}. {html.escape(t['evidence_notice'])}</p></footer>
 </main>{modal}{modal_script}</body></html>'''
 
 
 def landing_html(m: Compiled) -> str:
     choices = ' '.join(
-        f'<a href="{lang}/index.html" hreflang="{lang}" style="display:inline-block;padding:16px 22px;margin:10px;background:white;color:#215d8e;border-radius:7px;border:1px solid #cbd5df;text-decoration:none">{label} →</a>'
+        f'<a href="{lang}/index.html" hreflang="{lang}" style="display:inline-block;padding:16px 22px;margin:10px;background:white;color:#1e6864;border-radius:7px;border:1px solid #cbd5df;text-decoration:none">{label} →</a>'
         for lang, label in [('en', 'English'), ('fr', 'Français'), ('it', 'Italiano')] if lang in m.languages)
     return (f'<!doctype html><html lang="en"><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width, initial-scale=1">'
             f'<title>Spek — Structured multilingual publications</title></head>'
             f'<body style="font-family:system-ui;background:#f6f7f9;color:#1b2937;max-width:780px;margin:10vh auto;padding:30px">'
-            f'<p style="letter-spacing:.18em;color:#215d8e">SPEK · 0.5</p>'
+            f'<p style="letter-spacing:.18em;color:#1e6864">SPEK · 0.5</p>'
             f'<h1>One meaning. Many structured expressions.</h1>'
             f'<p>Multilingual editorial prototype. Demonstration content only; not scientifically validated.</p>'
             f'<nav aria-label="Select article language">{choices}</nav></body></html>')
@@ -263,7 +264,7 @@ def article_tex(m: Compiled, lang: str) -> str:
         r'\IfFontExistsTF{DejaVu Sans}{\setmainfont{DejaVu Sans}}{\IfFontExistsTF{Segoe UI}{\setmainfont{Segoe UI}}{\setmainfont{Latin Modern Roman}}}',
         r'\usepackage[margin=24mm]{geometry}',r'\usepackage{xcolor}',
         r'\usepackage{hyperref}',r'\usepackage{xurl}',r'\usepackage{parskip}',
-        r'\definecolor{kblue}{HTML}{215D8E}',r'\definecolor{ksoft}{HTML}{EDF3F7}',
+        r'\definecolor{kblue}{HTML}{1E6864}',r'\definecolor{ksoft}{HTML}{E4F2EF}',
         r'\newcommand{\spekSlot}[2]{\par\medskip{\small\bfseries\color{kblue}#1}\par\smallskip #2\par}',
         r'\newcommand{\spekFeatured}[2]{\par\medskip\noindent\fcolorbox{kblue}{ksoft}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\textbf{#1}\par\medskip #2}}\par\bigskip}',
         r'\hypersetup{colorlinks=true,linkcolor=kblue}',r'\title{'+escape_tex(doc.title)+'}',r'\date{}',
@@ -271,9 +272,6 @@ def article_tex(m: Compiled, lang: str) -> str:
         r'\tableofcontents',r'\newpage','\n'.join(content),
         r'\section*{'+escape_tex(t['trace'])+'}',
         r'\small '+escape_tex(t['source_status'])+': '+escape_tex(t['source_checked'] if doc.source_verified else t['source_unchecked']),
-        r'\par '+escape_tex(t['source'])+': '+r'\nolinkurl{'+doc.source_sha256+'}',
-        r'\par '+escape_tex(t['realizations'])+': '+r'\nolinkurl{'+doc.realizations_sha256+'}',
-        r'\par '+escape_tex(t['layouts'])+': '+r'\nolinkurl{'+doc.layouts_sha256+'}',
         r'\end{document}']
     return '\n'.join(preamble)+'\n'
 
@@ -330,8 +328,8 @@ def article_pdf(m: Compiled, lang: str, path: Path) -> None:
         if missing:
             examples=', '.join(f'U+{ord(c):04X}' for c in sorted(missing)[:8])
             raise ValidationError('PDF font missing required Unicode glyph(s) '+examples+'. Configure SPEK_FONT_REGULAR and SPEK_FONT_BOLD.')
-    dark=colors.HexColor('#1b2937'); muted=colors.HexColor('#627384'); accent=colors.HexColor('#215d8e')
-    pale=colors.HexColor('#edf3f7');line=colors.HexColor('#d9e0e7')
+    dark=colors.HexColor('#1b2937'); muted=colors.HexColor('#627384'); accent=colors.HexColor('#1e6864')
+    pale=colors.HexColor('#e4f2ef');line=colors.HexColor('#d9e0e7')
     styles={
         'title':ParagraphStyle('title',fontName='SpekUnicodeBold',fontSize=20.5,leading=26,spaceAfter=9,textColor=dark),
         'subtitle':ParagraphStyle('subtitle',fontName='SpekUnicode',fontSize=10,leading=14,spaceAfter=9,textColor=muted),
@@ -411,16 +409,13 @@ def article_pdf(m: Compiled, lang: str, path: Path) -> None:
                 if sec.items(slot):
                     story.extend([box(sec.items(slot),t.get(slot,slot.replace('_',' ').capitalize()),pale if n==0 else colors.white),Spacer(1,5)])
         story.append(Spacer(1,7))
-    # Trace block may not break into an orphan page with only hashes.
+    # Preserve human-readable provenance status without exposing raw fingerprints.
     meta=[para(t['trace'],'minor'),
           para(t['source_status']+': '+(t['source_checked'] if docmodel.source_verified else t['source_unchecked']),'note'),
-          para(t['source']+': '+docmodel.source_sha256,'note'),
-          para(t['realizations']+': '+docmodel.realizations_sha256,'note'),
-          para(t['layouts']+': '+docmodel.layouts_sha256,'note')]
+]
     trace_block = KeepTogether([HRFlowable(width='100%',thickness=.7,color=line)]+meta)
     if educational_packet:
-        # Long educational packets otherwise create a final page containing ONLY
-        # hashes. Place complete provenance near the abstract, not an orphan footer.
+        # Keep the status summary with the abstract in long educational packets.
         story.insert(heading_boundary, trace_block)
     else:
         story.append(trace_block)

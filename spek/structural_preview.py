@@ -17,6 +17,7 @@ import tempfile
 from typing import Any
 
 from .core import ValidationError
+from .branding import logo_svg
 from .studio_workflow import inspect_kristal
 
 FORMAT = 'spek.wiki-structural-preview-contracts/1.0'
@@ -127,93 +128,115 @@ def _items(assertions: list[dict], positions: list[int]):
 
 
 def _render_section_rows(kind: str, records: list[dict]) -> str:
-    """Seven bounded visual encodings; they never claim verified edges/hierarchies/ledgers."""
-    if kind in ('network', 'chain','trajectory','taxonomy'):
-        mark={'network':'⇄','chain':'→','trajectory':'↝','taxonomy':'↳'}[kind]
-        lines=[]
-        for r in records:
-            lines.append(
-                '<div class="relation"><div class="rel-grid">'
-                f'<span class="term">{_h(r["subject"])}</span>'
-                f'<span class="operator"><span aria-hidden="true">{mark}</span> {_h(r["predicate"])}</span>'
-                f'<span class="term">{_h(r["object"])}</span></div>'
-                f'<p class="meta">Position #{r["position"]} · {_h(r["id"])} · État source : {_h(r["status"])}</p>'
-                f'<details><summary>Provenance brute ({len(r["evidence"])})</summary><ul>'
-                + ''.join(f'<li><code>{_h(x)}</code></li>' for x in r['evidence'])
-                + '</ul></details></div>')
-        return ''.join(lines)
-    if kind=='provenance':
-        inverted:dict[str,list[int]]={}
-        for r in records:
-            for evidence in r['evidence']:
-                inverted.setdefault(str(evidence),[]).append(r['position'])
-        out=['<p>Références de preuve déclarées dans les assertions. Leur validité externe n’est pas contrôlée.</p>']
-        for ref,indices in sorted(inverted.items()):
-            out.append(f'<details class="relation"><summary><code>{_h(ref)}</code> — {len(indices)} occurrences</summary><p>Positions : {_h(", ".join(str(i) for i in indices))}</p></details>')
-        if not inverted: out.append('<p>Aucune référence de preuve déclarée.</p>')
-        return ''.join(out)
-    heading = ('Débit / crédit non attestés · affichage de triples bruts'
-               if kind=='ledger' else 'Observations brutes · axes non déduits')
-    rows=[f'<p class="meta">{_h(heading)}</p>','<div class="table-scroll"><table><thead><tr><th>Position</th><th>Sujet</th><th>Prédicat</th><th>Objet</th><th>Preuves déclarées</th></tr></thead><tbody>']
+    """Only source-declared relational terms; no internal IDs or audit metadata.
+
+    These raw relationships are deliberately collapsed in a *private* HTML
+    document. No provenance reference, hash, source path, assertion position,
+    or status is serialized into the browser markup.
+    """
+    if not records:
+        return '<p class="empty">Aucune relation disponible pour cette section.</p>'
+    if kind == 'provenance':
+        return ('<p class="empty">Les références de preuve sont consultables '
+                'dans le dossier canonique par un outil d’audit autorisé. '
+                'Elles ne sont pas intégrées dans cet aperçu.</p>')
+    if kind in ('network', 'chain', 'trajectory', 'taxonomy'):
+        glyph = {'network': '↔', 'chain': '→', 'trajectory': '↝', 'taxonomy': '↳'}[kind]
+        return ''.join(
+            '<div class="relation"><div class="rel-grid">'
+            f'<span class="term">{_h(r["subject"])}</span>'
+            f'<span class="operator"><span aria-hidden="true">{glyph}</span> {_h(r["predicate"])}</span>'
+            f'<span class="term">{_h(r["object"])}</span>'
+            '</div></div>' for r in records)
+    out=['<div class="table-scroll"><table><thead><tr><th>Sujet</th><th>Relation</th><th>Valeur déclarée</th></tr></thead><tbody>']
     for r in records:
-        rows.append('<tr>'
-                    f'<td>#{r["position"]}</td><td>{_h(r["subject"])}</td>'
-                    f'<td>{_h(r["predicate"])}</td><td>{_h(r["object"])}</td>'
-                    f'<td>{_h(", ".join(str(e) for e in r["evidence"]))}</td></tr>')
-    rows.append('</tbody></table></div>')
-    return ''.join(rows)
+        out.append('<tr>'
+                   f'<td>{_h(r["subject"])}</td><td>{_h(r["predicate"])}</td>'
+                   f'<td>{_h(r["object"])}</td></tr>')
+    return ''.join(out)+'</tbody></table></div>'
 
 
-def _render_document(info:dict, review:dict, assertions:list[dict], digest:str,contracts:dict) -> str:
-    slug=info['identity']
-    title=info.get('title') or slug
-    sections=review['ordered_structural_sections']
-    links=[]
-    blocks=[]
-    for idx,section in enumerate(sections,1):
-        template=section['planned_template_id']
-        contract=contracts[template]
-        positions=section['source_observation']['source_positions_zero_based']
-        records=list(_items(assertions,positions))
-        sec_id='s'+str(idx)
-        links.append(f'<a href="#{sec_id}"><b>{idx:02d}</b> {_h(section["heading"])} <small>{len(records)}</small></a>')
+def _render_document(info: dict, review: dict, assertions: list[dict], digest: str, contracts: dict) -> str:
+    """Human-centered, offline private preview; digest is never emitted."""
+    slug = info['identity']
+    title = info.get('title') or slug
+    sections = review['ordered_structural_sections']
+    links: list[str] = []
+    blocks: list[str] = []
+    for idx, part in enumerate(sections, 1):
+        template = part['planned_template_id']
+        contract = contracts[template]
+        positions = part['source_observation']['source_positions_zero_based']
+        rows = list(_items(assertions, positions))
+        sec_id = 's'+str(idx)
+        links.append(f'<a href="#{sec_id}"><span class="nav-num">{idx:02d}</span>'
+                     f'<span>{_h(part["heading"])}</span></a>')
+        subtitle = part.get('editorial_intent', '')
         blocks.append(
-            f'<section id="{sec_id}"><div class="section-label">Partie {idx} · Aperçu {_h(contract["preview_kind"])}</div>'
-            f'<h2>{_h(section["heading"])}</h2>'
-            f'<p class="sub">Gabarit prescrit : <code>{_h(template)}</code> · {_h(contract["label"])} · {len(records)} occurrences</p>'
-            f'<p>{_h(section.get("editorial_intent", ""))}</p>'
-            '<p class="note">Inspection structurelle uniquement : les relations ci-dessous sont des triples tels que déclarés. '
-            'Les liens visuels ne prouvent ni causalité, ni chronologie, ni hiérarchie, ni équilibrage comptable.</p>'
-            '<details><summary>Afficher les assertions source de cette partie</summary>'
-            + _render_section_rows(contract['preview_kind'],records)
-            + '</details></section>'
-        )
-    risks=''.join(f'<li>{_h(r)}</li>' for r in review.get('exclusions_and_risks',[]))
-    return f'''<!doctype html><html lang="fr"><head><meta charset="utf-8">
+            f'<section class="section-card" id="{sec_id}" aria-labelledby="h-{sec_id}">'
+            f'<p class="section-label">Partie {idx} · Aperçu structurel</p>'
+            f'<h2 id="h-{sec_id}">{_h(part["heading"])}</h2>'
+            f'<p class="sub">Gabarit prescrit · <code>{_h(template)}</code></p>'
+            f'<p class="description">{_h(subtitle)}</p>'
+            '<details class="relations"><summary>Consulter les relations déclarées'
+            '<span class="summary-help"> (données privées)</span></summary>'
+            '<p class="source-help">Données brutes en lecture seule, présentées '
+            'pour comprendre la composition. Elles ne constituent pas un texte '
+            'éditorial approuvé.</p>'
+            + _render_section_rows(contract['preview_kind'],rows)
+            + '</details></section>')
+    risks = ''.join(f'<li>{_h(r)}</li>' for r in review.get('exclusions_and_risks', []))
+    logo = logo_svg()
+    # No original source hash, path, evidence IDs or audit manifest is shipped
+    # in the HTML, even as hidden markup or script state.
+    return f'''<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'none'; form-action 'none'; base-uri 'none'">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{_h(title)} · inspection Spek</title><style>
-:root{{color-scheme:light;font-family:system-ui,Segoe UI,sans-serif;background:#f6f7fb;color:#1d2532}}*{{box-sizing:border-box}}
-body{{margin:0}}.banner{{background:#1c2b4a;color:white;padding:18px 4vw;border-bottom:4px solid #c66d30}}
-.banner h1{{font-size:1.5rem;margin:8px 0}}.banner p{{max-width:1000px;line-height:1.5;margin:4px 0}}
-.shell{{display:grid;grid-template-columns:minmax(210px,270px) minmax(0,1fr);gap:20px;max-width:1520px;margin:auto;padding:24px}}
-nav{{position:sticky;top:15px;align-self:start;background:white;border:1px solid #d8deeb;border-radius:12px;padding:15px}}
-nav a{{display:block;color:#24385d;text-decoration:none;border-bottom:1px solid #eee;padding:10px 4px;font-size:.9rem;line-height:1.4}}nav a:hover{{background:#f5f7fd}}nav small{{float:right}}
-main{{min-width:0}}section{{background:white;border:1px solid #d8deeb;padding:22px;margin-bottom:18px;border-radius:12px}}
-h2{{font-size:1.25rem}}.section-label{{font-size:.78rem;font-weight:bold;letter-spacing:.06em;color:#57667f;text-transform:uppercase}}
-.sub,.meta{{font-size:.82rem;color:#586176;overflow-wrap:anywhere}}.note{{background:#fffaeb;border-left:3px solid #c58c22;padding:12px;color:#59420a}}
-.relation{{border:1px solid #dce2ed;border-radius:8px;margin:10px 0;padding:12px;background:#fbfcff;overflow-wrap:anywhere}}
-.rel-grid{{display:grid;grid-template-columns:minmax(0,1fr) minmax(90px,auto) minmax(0,1fr);gap:12px;align-items:center}}
-.term{{overflow-wrap:anywhere}}.operator{{color:#425d82;font-size:.86rem}}code{{white-space:normal;overflow-wrap:anywhere}}
-details>summary{{cursor:pointer;padding:8px;font-weight:600}}.table-scroll{{overflow-x:auto}}table{{border-collapse:collapse;width:100%;font-size:.85rem}}th,td{{border:1px solid #d9deea;text-align:left;padding:8px;overflow-wrap:anywhere;max-width:280px}}th{{background:#f0f3f9}}
-@media(max-width:850px){{.shell{{display:block;padding:12px}}nav{{position:static;margin-bottom:15px}}.rel-grid{{display:block}}.operator{{display:block;padding:5px}}}}
-</style></head><body><header class="banner"><strong>SPEK · ATELIER DE COMPOSITION</strong>
-<h1>{_h(title)} <span style="font-size:.7em;opacity:.8">({_h(slug)})</span></h1>
-<p>APERÇU STRUCTUREL PRIVÉ — NON PUBLIABLE. Source locale identique aux octets étudiés : <code>{_h(digest)}</code>.</p>
-<p>{len(assertions)} occurrences d’assertions · {len(sections)} sections prescrites par l’IA · aucune assertion choisie pour publication · aucune réalisation SemantiK.</p>
-</header><div class="shell"><nav><h2>Plan du Kristal</h2>{''.join(links)}<a href="#risks">Limites et risques</a></nav>
-<main>{''.join(blocks)}<section id="risks"><h2>Limites et risques connus</h2><ul>{risks}</ul>
-<p>Seuls les identifiants et triples de la source sont affichés : pas de texte de synthèse généré, pas de certification C1/C2/C3, pas de RuntimeSet SemantiK attesté, pas d’export GitHub Wiki.</p></section></main></div></body></html>'''
+<title>{_h(title)} · Atelier Spek · aperçu privé</title>
+<style>
+:root{{color-scheme:light;--accent:#1e6864;--dark:#154d4a;--soft:#e4f2ef;--paper:#f6f9f8;--ink:#142329;--muted:#64717a;--line:#dbe7e4;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--paper);color:var(--ink)}}
+*{{box-sizing:border-box}} html{{scroll-behavior:smooth}}body{{margin:0;line-height:1.55}}
+.skip{{position:absolute;top:-100px;left:16px;background:var(--accent);color:white;padding:8px 14px;z-index:10}}.skip:focus{{top:12px}}
+header{{background:white;border-bottom:1px solid var(--line)}}
+.brand-row{{max-width:1500px;margin:auto;min-height:90px;padding:16px 34px;display:flex;align-items:center;gap:20px}}
+.brand-mark{{flex:none;width:80px;height:auto}}
+.brand-copy{{border-left:1px solid var(--line);padding-left:22px}}.brand-copy strong{{display:block;font-size:1.12rem;letter-spacing:.01em}}.brand-copy .object{{color:var(--accent);font-weight:750;font-size:1.05rem}}
+.brand-copy .slug{{font-weight:500;color:var(--muted);font-size:.92rem}}
+.wrapper{{max-width:1500px;margin:auto;padding:22px 26px 72px}}
+.hero{{border:1px solid #d7e9e5;background:linear-gradient(105deg,#eff8f6,#deeeeb);border-radius:15px;padding:22px 25px;display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:25px}}
+.hero h1{{font-size:clamp(1.13rem,2vw,1.45rem);line-height:1.35;margin:0 0 6px}}.hero p{{margin:0;color:#445a5b}}
+.pills{{display:flex;align-items:center;gap:9px;flex-wrap:wrap}}.pill{{font-size:.8rem;border:1px solid #cfe3de;background:#fff;border-radius:50px;padding:9px 12px;color:var(--dark);font-weight:700;white-space:nowrap}}
+.shell{{display:grid;grid-template-columns:minmax(220px,285px) minmax(0,1fr);gap:22px;align-items:start}}
+nav{{position:sticky;top:16px;background:#fff;border:1px solid var(--line);border-radius:15px;padding:19px 14px;box-shadow:0 3px 17px #13392f0c}}nav h2{{font-size:1.15rem;padding:0 10px;margin:6px 0 18px}}
+nav a{{display:flex;gap:12px;align-items:center;color:#253a3c;text-decoration:none;border-radius:8px;padding:10px 11px;margin:2px 0;font-size:.91rem}}nav a:hover,nav a:focus-visible{{background:var(--soft);color:var(--dark)}}.nav-num{{color:var(--accent);font-weight:800}}
+nav a:last-child{{border-top:1px solid var(--line);border-radius:0;margin-top:16px;padding-top:16px}}main{{min-width:0}}
+.section-card{{scroll-margin-top:20px;background:#fff;border:1px solid var(--line);border-radius:15px;padding:26px 28px;margin-bottom:20px;box-shadow:0 4px 18px #173d330c}}
+.section-label{{color:var(--accent);text-transform:uppercase;letter-spacing:.08em;font-size:.76rem;font-weight:800;margin:0 0 12px}}
+.section-card h2{{font-size:1.55rem;margin:0 0 5px;letter-spacing:-.02em}}.sub{{color:var(--muted);font-size:.87rem;margin:0 0 20px}}.sub code{{font-family:inherit;color:#4b6463}}.description{{font-size:1rem;margin:0 0 17px;max-width:72ch}}
+.notice{{background:#fdf8eb;border-left:3px solid #bb8825;color:#6e551f;padding:13px 16px;border-radius:0 7px 7px 0;margin:15px 0 20px;font-size:.9rem}}
+.relations{{border-top:1px solid #e8efed;padding-top:13px}}details>summary{{cursor:pointer;color:var(--accent);font-weight:750;list-style:none;padding:8px 0}}details>summary::before{{content:'›';display:inline-block;margin-right:10px;font-size:1.4rem;vertical-align:-1px}}details[open]>summary::before{{transform:rotate(90deg)}}.summary-help{{font-size:.83rem;font-weight:450;color:var(--muted)}}.source-help{{color:var(--muted);font-size:.87rem}}
+.relation{{border:1px solid var(--line);border-radius:9px;margin:10px 0;padding:13px 15px;background:#fbfdfc;overflow-wrap:anywhere}}
+.rel-grid{{display:grid;grid-template-columns:minmax(0,1fr) minmax(90px,auto) minmax(0,1fr);gap:14px;align-items:center}}.operator{{color:var(--accent);font-size:.88rem;text-align:center}}.term{{overflow-wrap:anywhere}}
+.table-scroll{{overflow-x:auto}}table{{border-collapse:collapse;width:100%;font-size:.87rem}}th,td{{border-bottom:1px solid var(--line);text-align:left;padding:11px;overflow-wrap:anywhere}}th{{background:var(--soft)}}.empty{{color:var(--muted)}}.footer-note{{color:var(--muted);font-size:.86rem;margin:24px 6px}}
+a:focus-visible,summary:focus-visible{{outline:3px solid #71aba6;outline-offset:3px}}
+@media(max-width:900px){{.hero{{display:block}}.pills{{margin-top:16px}}.shell{{grid-template-columns:1fr}}nav{{position:static}}nav a{{display:inline-flex;margin:2px 1px}}nav a:last-child{{border-top:none;padding:10px 11px;margin-top:2px}}}}
+@media(max-width:560px){{.brand-row{{padding:13px 18px}}.brand-mark{{width:52px}}.brand-copy{{padding-left:12px}}.brand-copy strong{{font-size:.9rem}}.wrapper{{padding:14px}}.section-card{{padding:21px 18px}}.hero{{padding:19px 17px}}.rel-grid{{display:block}}.operator{{display:block;padding:5px 0;text-align:left}}.summary-help{{display:none}}}}
+@media print{{nav,.relations,.pills{{display:none}}.section-card{{break-inside:avoid;box-shadow:none}}.wrapper{{padding:10px}}}}
+</style></head>
+<body><a class="skip" href="#content">Passer au contenu</a>
+<header><div class="brand-row">{logo}<div class="brand-copy"><strong>SPEK · Atelier de composition</strong>
+<span class="object">{_h(title)}</span> <span class="slug">({_h(slug)})</span></div></div></header>
+<div class="wrapper"><div class="hero"><div><h1>Aperçu structurel privé — brouillon non publiable</h1>
+<p>Explore la composition proposée pour ce Kristal. Aucun texte final n’a encore été produit.</p></div>
+<div class="pills"><span class="pill">◈ Aperçu privé</span><span class="pill">▤ {len(sections)} sections</span><span class="pill">✎ Proposition IA</span></div></div>
+<div class="shell"><nav aria-label="Plan du Kristal"><h2>Plan du Kristal</h2>{''.join(links)}<a href="#risks">Limites et précautions</a></nav>
+<main id="content"><p class="notice">Ces vues présentent uniquement des relations déclarées. Elles ne démontrent pas, à elles seules, de causalité, de chronologie, de hiérarchie ou d’équilibrage comptable.</p>
+{''.join(blocks)}<section class="section-card" id="risks"><p class="section-label">À consulter</p><h2>Limites et précautions</h2><ul>{risks}</ul>
+<p>Cette proposition doit être revue avant toute réalisation linguistique ou publication.</p></section>
+<p class="footer-note">SPEK · Atelier local de composition · Document privé, sans autorisation de publication.</p>
+</main></div></div></body></html>'''
 
 
 def create_structural_preview(spek_root: Path, kristal_folder: Path, *, output: Path | None=None) -> dict[str, Any]:
@@ -248,7 +271,6 @@ def create_structural_preview(spek_root: Path, kristal_folder: Path, *, output: 
     manifest={
         'format':MANIFEST_FORMAT,
         'publication_eligible':False,'approval':'NONE','semantik_realized':False,
-        'source_raw_sha256':digest,
         'kristal_slug':info['identity'],
         'assertion_occurrences':len(assertions),
         'sections':[{'id':s['section_id'],'template_id':s['planned_template_id'],

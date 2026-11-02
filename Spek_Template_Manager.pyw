@@ -115,8 +115,8 @@ def _load_spek(repository):
 class TemplateManagerApp(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title('Spek — Atelier de publication')
-        self.geometry('1260x810')
+        self.title('Spek — Atelier de composition')
+        self.geometry('1320x870')
         self.minsize(900, 580)
         self.root_folder = ROOT
         self.inv = {}
@@ -132,6 +132,7 @@ class TemplateManagerApp(tk.Tk):
         self.preview_busy = False
         self.registry = None
         self.proposals = {}
+        self._brand_logo = None
         self.guide_var = tk.StringVar()
         self.next_steps_var = tk.StringVar()
         self._build()
@@ -139,12 +140,42 @@ class TemplateManagerApp(tk.Tk):
         self.load_inventory()
 
     def _build(self):
-        style=ttk.Style(self)
-        if 'vista' in style.theme_names() and sys.platform=='win32':
-            style.theme_use('vista')
-        top=ttk.Frame(self,padding=(14,10));top.pack(fill='x')
-        ttk.Label(top,text='SPEK · ATELIER',font=('Segoe UI',15,'bold')).pack(side='left')
-        ttk.Label(top,text='Ouvrir un Kristal ou un article · Comprendre la composition · Prévisualiser localement · Aucune publication',foreground='#667085').pack(side='right')
+        style = ttk.Style(self)
+        # "clam" honors the actual requested brand colors on Windows too.
+        if 'clam' in style.theme_names():
+            style.theme_use('clam')
+        self.configure(background='#f6f9f8')
+        style.configure('TFrame', background='#f6f9f8')
+        style.configure('TLabel', background='#f6f9f8', foreground='#172c2b')
+        style.configure('TLabelframe', background='#f6f9f8', bordercolor='#d4e7e2', relief='solid')
+        style.configure('TLabelframe.Label', background='#f6f9f8', foreground='#1e6864', font=('Segoe UI', 9, 'bold'))
+        style.configure('TButton', padding=(9, 6), background='#ffffff', foreground='#154d4a', bordercolor='#bddbd4')
+        style.map('TButton', background=[('active','#e4f2ef'),('disabled','#f0f2f1')], foreground=[('disabled','#8c9996')])
+        style.configure('Brand.TButton', padding=(10, 6), background='#1e6864', foreground='#ffffff', bordercolor='#1e6864')
+        style.map('Brand.TButton', background=[('active','#154d4a'),('disabled','#eef2f1')],foreground=[('disabled','#899691')])
+        style.configure('TNotebook', background='#f6f9f8', bordercolor='#d4e7e2')
+        style.configure('TNotebook.Tab', padding=(12, 7), background='#f0f6f4', foreground='#365d5a')
+        style.map('TNotebook.Tab',background=[('selected','#ffffff')],foreground=[('selected','#1e6864')])
+        style.configure('Treeview', background='#ffffff', fieldbackground='#ffffff', foreground='#173d3a', rowheight=25)
+        style.map('Treeview', background=[('selected','#1e6864')], foreground=[('selected','#ffffff')])
+        style.configure('Header.TFrame', background='#ffffff')
+        style.configure('Header.TLabel', background='#ffffff', foreground='#1e6864')
+        top = ttk.Frame(self, style='Header.TFrame', padding=(18,12))
+        top.pack(fill='x')
+        logo_path = ROOT / 'assets' / 'spek-logo.png'
+        try:
+            if logo_path.is_file():
+                self._brand_logo = tk.PhotoImage(file=str(logo_path))
+                ttk.Label(top, image=self._brand_logo, style='Header.TLabel').pack(side='left', padx=(0,13))
+        except (tk.TclError, OSError):
+            self._brand_logo = None
+        header_copy = ttk.Frame(top, style='Header.TFrame')
+        header_copy.pack(side='left', fill='y')
+        ttk.Label(header_copy, text='SPEK · ATELIER DE COMPOSITION', style='Header.TLabel',
+                  font=('Segoe UI',15,'bold')).pack(anchor='w')
+        ttk.Label(header_copy, text='Kristals · Compositions IA · Prévisualisation locale',
+                  style='Header.TLabel', font=('Segoe UI',9)).pack(anchor='w')
+        ttk.Label(top, text='Aucune publication automatique', style='Header.TLabel').pack(side='right', padx=(10,0))
 
         # Parcours principal (UX-15 / UX-16) : un seul espace de travail.
         work=ttk.LabelFrame(self,text='1) Mon travail · Ouvrir → Vérifier → Prévisualiser',padding=9)
@@ -152,7 +183,7 @@ class TemplateManagerApp(tk.Tk):
         bar=ttk.Frame(work);bar.pack(fill='x')
         self.open_article_button=ttk.Button(bar,text='Ouvrir un article…',command=self.open_article)
         self.open_article_button.pack(side='left',padx=(0,7))
-        self.open_kristal_button=ttk.Button(bar,text='Ouvrir un Kristal…',command=self.open_kristal)
+        self.open_kristal_button=ttk.Button(bar,text='Ouvrir un Kristal…',command=self.open_kristal,style='Brand.TButton')
         self.open_kristal_button.pack(side='left',padx=(0,7))
         self.goto_recipe_button=ttk.Button(bar,text='Voir la composition',command=self.goto_assigned_recipe)
         self.goto_recipe_button.pack(side='left',padx=(0,7))
@@ -161,28 +192,32 @@ class TemplateManagerApp(tk.Tk):
         ttk.Combobox(bar,values=('fr','en','it'),textvariable=self.lang_var,state='readonly',width=5).pack(side='left')
         self.verify_button=ttk.Button(bar,text='2) Vérifier',command=lambda:self.run_compiler(False))
         self.verify_button.pack(side='right',padx=(6,0))
-        self.preview_button=ttk.Button(bar,text='3) Prévisualiser en HTML',command=lambda:self.run_compiler(True))
+        self.preview_button=ttk.Button(bar,text='3) Prévisualiser en HTML',command=lambda:self.run_compiler(True),style='Brand.TButton')
         self.preview_button.pack(side='right')
         privatebar=ttk.Frame(work);privatebar.pack(fill='x',pady=(7,0))
-        self.structural_preview_button=ttk.Button(privatebar,text='Explorer les assertions dans la composition (aperçu privé)',command=self.open_structural_preview)
+        self.structural_preview_button=ttk.Button(privatebar,text='Voir l’aperçu structurel privé',command=self.open_structural_preview,style='Brand.TButton')
         self.structural_preview_button.pack(side='left')
         ttk.Label(privatebar,text='Pour les 5 Kristals étudiés, si le fichier local correspond au snapshot.',foreground='#525c6a').pack(side='left',padx=(12,0))
+        semantikbar=ttk.Frame(work);semantikbar.pack(fill='x',pady=(5,0))
+        self.semantik_import_button=ttk.Button(semantikbar,text='Importer des résultats SemantiK…',command=self.import_semantik)
+        self.semantik_import_button.pack(side='left')
+        self.semantik_prepare_button=ttk.Button(semantikbar,text='Préparer la correspondance…',command=self.prepare_semantik_mapping)
+        self.semantik_prepare_button.pack(side='left',padx=(8,0))
+        ttk.Label(semantikbar,text='Requêtes/résultats explicites · Privé, non qualifié',foreground='#525c6a').pack(side='left',padx=(12,0))
         self.context_var=tk.StringVar(value='Commence par ouvrir soit un Kristal (pour voir sa composition prescrite), soit un article.json + realizations.json (pour voir le vrai rendu).')
         ttk.Label(work,textvariable=self.context_var,foreground='#525c6a',wraplength=1130).pack(anchor='w',pady=(7,2))
         ttk.Label(work,textvariable=self.next_steps_var,foreground='#344054',wraplength=1130,justify='left').pack(anchor='w',pady=(0,2))
 
-        helper=ttk.LabelFrame(self,text='Ce que tu peux faire ici',padding=8)
-        helper.pack(fill='x',padx=12,pady=(0,8))
-        helper.columnconfigure(0,weight=1)
-        helper.columnconfigure(1,weight=1)
-        helper.columnconfigure(2,weight=1)
-        ttk.Label(helper,text='A · Parcourir la bibliothèque',font=('Segoe UI',10,'bold')).grid(row=0,column=0,sticky='w',padx=(0,10))
-        ttk.Label(helper,text='Choisis à gauche une catégorie, un archétype Wiki, une composition IA ou un layout partagé.',wraplength=300,justify='left',foreground='#475467').grid(row=1,column=0,sticky='w',padx=(0,10))
-        ttk.Label(helper,text='B · Ouvrir un Kristal',font=('Segoe UI',10,'bold')).grid(row=0,column=1,sticky='w',padx=(0,10))
-        ttk.Label(helper,text='Lecture seule : Spek montre l’identité, le modèle natif et la composition qui lui est assignée dans le registre. Spek ne devine rien.',wraplength=300,justify='left',foreground='#475467').grid(row=1,column=1,sticky='w',padx=(0,10))
-        ttk.Label(helper,text='C · Voir le rendu final',font=('Segoe UI',10,'bold')).grid(row=0,column=2,sticky='w')
-        ttk.Label(helper,text='Un Kristal revu permet un aperçu privé de sa structure. Une vraie page exige article.json et realizations.json, puis Vérifier et Prévisualiser.',wraplength=300,justify='left',foreground='#475467').grid(row=1,column=2,sticky='w')
-        ttk.Label(helper,textvariable=self.guide_var,foreground='#1d2939',wraplength=1120,justify='left').grid(row=2,column=0,columnspan=3,sticky='w',pady=(8,0))
+        # A compact contextual help strip. The detailed tutorial lives in its tab,
+        # so the source/section workspace stays visible on ordinary laptop screens.
+        helper = ttk.Frame(self, padding=(14,3,14,6))
+        helper.pack(fill='x')
+        ttk.Label(helper, text='Besoin d’aide ?', foreground='#1e6864',
+                  font=('Segoe UI', 9, 'bold')).pack(side='left', padx=(0,10))
+        ttk.Button(helper, text='Guide pas à pas',
+                   command=lambda: self.notebook.select(self.tab_guide)).pack(side='right')
+        ttk.Label(helper, textvariable=self.guide_var,
+                  foreground='#4c6864', wraplength=900).pack(side='left', fill='x', expand=True)
 
         rootbar=ttk.LabelFrame(self,text='2) Dépôt Spek utilisé par l’atelier',padding=8)
         rootbar.pack(fill='x',padx=12,pady=(0,8))
@@ -226,7 +261,7 @@ class TemplateManagerApp(tk.Tk):
         self.notebook.add(self.tab_json,text='Avancé · Éditeur JSON')
 
         canvas_outer=ttk.Frame(self.tab_preview);canvas_outer.pack(fill='both',expand=True)
-        self.canvas=tk.Canvas(canvas_outer,bg='#f5f7fa',highlightthickness=0)
+        self.canvas=tk.Canvas(canvas_outer,bg='#f6f9f8',highlightthickness=0)
         sb=ttk.Scrollbar(canvas_outer,orient='vertical',command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=sb.set)
         self.canvas.pack(side='left',fill='both',expand=True)
@@ -239,7 +274,7 @@ class TemplateManagerApp(tk.Tk):
         guidewrap=ttk.Frame(self.tab_guide,padding=10)
         guidewrap.pack(fill='both',expand=True)
         ttk.Label(guidewrap,text='Guide d’utilisation',font=('Segoe UI',12,'bold')).pack(anchor='w',pady=(0,6))
-        self.guide_text=tk.Text(guidewrap,wrap='word',height=20,font=('Segoe UI',10),background='#fcfcfd')
+        self.guide_text=tk.Text(guidewrap,wrap='word',height=20,font=('Segoe UI',10),background='#ffffff')
         guide_scroll=ttk.Scrollbar(guidewrap,orient='vertical',command=self.guide_text.yview)
         self.guide_text.configure(yscrollcommand=guide_scroll.set)
         self.guide_text.pack(side='left',fill='both',expand=True)
@@ -249,7 +284,7 @@ class TemplateManagerApp(tk.Tk):
         editorbar=ttk.Frame(self.tab_json,padding=6);editorbar.pack(fill='x')
         ttk.Label(editorbar,text='Les modifications ne sont écrites qu’avec « Enregistrer ». Sauvegardes automatiques avant remplacement.',foreground='#525c6a').pack(anchor='w')
         editframe=ttk.Frame(self.tab_json);editframe.pack(fill='both',expand=True)
-        self.text=tk.Text(editframe,wrap='none',undo=True,font=('Consolas',10),tabs=('30',),background='#fcfcfd')
+        self.text=tk.Text(editframe,wrap='none',undo=True,font=('Consolas',10),tabs=('30',),background='#ffffff')
         y2=ttk.Scrollbar(editframe,orient='vertical',command=self.text.yview)
         x2=ttk.Scrollbar(self.tab_json,orient='horizontal',command=self.text.xview)
         self.text.configure(yscrollcommand=y2.set,xscrollcommand=x2.set)
@@ -285,7 +320,13 @@ class TemplateManagerApp(tk.Tk):
             '   - Spek montre ses métadonnées déclarées et, si elle existe, la composition Wiki qui lui est attribuée.',
             '   - Spek ne choisit pas de templates automatiquement.',
             '',
-            '2. Si tu veux voir une vraie page : clique sur « Ouvrir un article… ».',
+            '2. Si SemantiK a déjà produit les textes : clique sur « Importer des résultats SemantiK… ».',
+            '   - « Préparer la correspondance… » crée une liste de clés avec chemins à compléter.',
+            '   - Sélectionne article.json puis un fichier de correspondance (requête/résultat par clé).',
+            '   - Spek contrôle langue, obligations, couverture, sources et empreintes déterministes.',
+            '   - Les réalisations restent importées/non revues : qualification RuntimeSet et C1/C2/C3 sont externes.',
+            '',
+            '3. Si tu veux voir une vraie page : clique sur « Ouvrir un article… ».',
             '   - Choisis article.json puis realizations.json.',
             '   - Clique sur « Vérifier » pour contrôler localement le projet.',
             '   - Clique sur « Prévisualiser en HTML » pour ouvrir le rendu final dans ton navigateur.',
@@ -306,7 +347,7 @@ class TemplateManagerApp(tk.Tk):
         ]
         if hasattr(self, 'guide_text'):
             self._set_readonly_text(self.guide_text, '\n'.join(guide))
-        self.guide_var.set('Astuce : un Kristal sert surtout à consulter sa composition prescrite ; pour voir le rendu complet, il faut ensuite ouvrir ou produire le couple article.json + realizations.json.')
+        self.guide_var.set('Ouvre un Kristal pour explorer sa composition ; ouvre un article avec ses réalisations SemantiK pour prévisualiser le document.')
         self._refresh_next_steps()
 
     def _refresh_next_steps(self):
@@ -341,7 +382,7 @@ class TemplateManagerApp(tk.Tk):
                          and self.kristal_details.get('source_snapshot_comparison') == 'MATCHES_UPLOADED_SNAPSHOT'
                          and not self.preview_busy)
         self.structural_preview_button.configure(state='normal' if can_audit else 'disabled')
-        for control in (self.open_article_button,self.open_kristal_button,self.change_root_button):
+        for control in (self.open_article_button,self.open_kristal_button,self.change_root_button,self.semantik_import_button,self.semantik_prepare_button):
             control.configure(state='disabled' if self.preview_busy else 'normal')
         self._refresh_next_steps()
 
@@ -395,6 +436,76 @@ class TemplateManagerApp(tk.Tk):
             self._status('Article chargé, non encore vérifié')
             self._update_buttons();self._show_workspace();self._refresh_guide()
         except (ValueError,OSError,ValidationError) as e:self._error('Projet invalide',e)
+
+    def prepare_semantik_mapping(self):
+        if self.preview_busy:return
+        article=filedialog.askopenfilename(parent=self,title='Choisir article.json pour préparer les clés de réalisation',
+                                           initialdir=str(self.article_path.parent if self.article_path else self.root_folder),
+                                           filetypes=[('Fichiers JSON','*.json')])
+        if not article:return
+        target=filedialog.asksaveasfilename(parent=self,title='Enregistrer le plan de liaison SemantiK',
+                                           initialdir=str(Path(article).parent),initialfile='semantik-mapping.json',
+                                           defaultextension='.json',filetypes=[('Fichiers JSON','*.json')])
+        if not target:return
+        try:
+            from spek.semantik_transfer import prepare_mapping
+            result=prepare_mapping(Path(article),self.lang_var.get(),Path(target))
+            self._status(str(result['required_keys'])+' clés à relier dans '+result['mapping'])
+            messagebox.showinfo('Spek · correspondance préparée',
+                str(result['required_keys'])+' clés listées dans '+result['mapping']+'\n\n'
+                'Spek n’a produit aucune requête ni texte. Remplis les chemins requests/ et results/ avec les sorties réelles de SemantiK Architect, puis utilise « Importer des résultats SemantiK… ».',parent=self)
+        except (ValueError,OSError,ValidationError) as exc:self._error('Préparation du transfert',exc)
+
+    def import_semantik(self):
+        if self.preview_busy:return
+        source=filedialog.askopenfilename(parent=self,title='Choisir l’article Spek (article.json)',
+                                          initialdir=str(self.article_path.parent if self.article_path else self.root_folder),
+                                          filetypes=[('Fichiers JSON','*.json')])
+        if not source:return
+        mapping=filedialog.askopenfilename(parent=self,title='Choisir le manifeste de correspondance SemantiK (mapping.json)',
+                                           initialdir=str(Path(source).parent),filetypes=[('Fichiers JSON','*.json')])
+        if not mapping:return
+        snapshot=None
+        try:
+            source_obj=json.loads(Path(source).read_text(encoding='utf-8'))
+            if source_obj.get('source',{}).get('origin')=='kristal_v9':
+                snapshot=filedialog.askopenfilename(parent=self,title='Choisir le state snapshot v9 lié à cet article',
+                                                    initialdir=str(Path(source).parent),filetypes=[('Fichiers JSON','*.json')])
+                if not snapshot:return
+        except (OSError,ValueError,AttributeError) as exc:
+            self._error('Article illisible',exc);return
+        from spek.semantik_transfer import transfer
+        # Never write in a repository, to locals/, or over an earlier output.
+        out=Path(tempfile.mkdtemp(prefix='spek-semantik-prive-'))/'transfert'
+        self.preview_busy=True;self._update_buttons()
+        self._status('Contrôle des requêtes et résultats SemantiK…')
+        def worker():
+            try:
+                result=transfer(Path(source),Path(mapping),out,layouts=self.root_folder/'layouts',
+                                state_snapshot=Path(snapshot) if snapshot else None)
+            except Exception as exc:
+                self.after(0,lambda err=str(exc):self._semantik_import_done(None,err,source))
+            else:
+                self.after(0,lambda res=result:self._semantik_import_done(res,None,source))
+        threading.Thread(target=worker,daemon=True).start()
+
+    def _semantik_import_done(self,result,error,source):
+        self.preview_busy=False
+        if error:
+            self._update_buttons()
+            self._status('Import SemantiK REFUSÉ : '+str(error)[:160])
+            messagebox.showerror('Spek · import SemantiK refusé',str(error),parent=self)
+            return
+        self.article_path=Path(source)
+        self.realizations_path=Path(result['realizations'])
+        self.lang_var.set(result['language'])
+        self.context_var.set('Transfert SemantiK : '+str(result['realization_count'])+' clés · IMPORTÉ, non qualifié · Aucune autorisation de publier.')
+        self._update_buttons();self._show_workspace();self._refresh_guide()
+        self._status('Transfert SemantiK privé · '+str(result['directory']))
+        messagebox.showinfo('Spek · import SemantiK contrôlé',
+            'Les textes reçus correspondent aux blocs, obligations et références déclarés.\n'
+            'Aucune revue humaine ni authentification du RuntimeSet par Spek. Aucune publication autorisée.\n\n'
+            'Tu peux maintenant vérifier puis prévisualiser le rendu local.\n\nRapport : '+str(result['report']),parent=self)
 
     def open_kristal(self):
         if self.preview_busy:return
@@ -630,7 +741,7 @@ class TemplateManagerApp(tk.Tk):
         if not self.selection:
             self._preview_line('Choisis un élément à gauche pour voir son rôle dans le workflow.','heading');return
         key=self.selection;kind=key[0]
-        self._preview_line('Aperçu et mode d’emploi', 'heading')
+        self._preview_line('Composition et étapes suivantes', 'heading')
         try:
             if kind in {'root','layouts','profiles','drafts','recipes','workspace','recipe','proposals','proposal'}:
                 if kind=='workspace':
@@ -641,10 +752,10 @@ class TemplateManagerApp(tk.Tk):
                         self._preview_card('Formulations fournies',str(self.realizations_path))
                         self._preview_card('Prochaine action','Clique sur « Vérifier », puis sur « Prévisualiser en HTML » pour ouvrir le vrai rendu local.')
                     else:
-                        self._preview_card('Aucun article chargé','Pour voir une vraie page, ouvre un article.json et son fichier realizations.json.')
+                        self._preview_card('Aucun article prêt à prévisualiser','Pour voir une vraie page, ouvre un article.json et son fichier realizations.json.')
                     if self.kristal_details:
                         obj=self.kristal_details
-                        self._preview_card('Kristal ouvert · lecture seule',obj['folder'])
+                        self._preview_card('Kristal ouvert · lecture seule',obj.get('title') or obj['identity'])
                         self._preview_card('Slug actuel',str(obj['identity'] or 'non déclaré'))
                         if obj.get('declared_identity') != obj.get('identity'):
                             self._preview_card('Slug dans le fichier ouvert (ancienne forme)', str(obj.get('declared_identity')))
@@ -660,10 +771,10 @@ class TemplateManagerApp(tk.Tk):
                                 self._preview_card(f'{n}. {section["proposed_function"]}',section['layout_id']+' · '+section['composition_id'].removeprefix('arketype-'))
                             if obj.get('structure_review'):
                                 rev=obj['structure_review']
-                                self._preview_card('Étude canonique disponible',f'{rev["source"]["assertion_occurrences"]} occurrences d’assertions v8 inspectées. Comparaison de l’état local : '+obj['source_snapshot_comparison'])
+                                self._preview_card('Revue structurelle disponible',f'{rev["source"]["assertion_occurrences"]} relations observées · Correspondance locale vérifiée' if obj['source_snapshot_comparison']=='MATCHES_UPLOADED_SNAPSHOT' else 'Sources à revoir avant prévisualisation')
                                 for section in rev['ordered_structural_sections']:
-                                    self._preview_card(section['heading'],f'{section["source_observation"]["observed_assertion_occurrences"]} occurrences · Gabarit : {section["planned_template_id"]} · aperçu structurel privé si empreinte identique · layout typé exécutable si contenu SemantiK fourni')
-                            self._preview_card('Important','Étude IA non approuvée. Aucune assertion n’est sélectionnée pour publier. L’aperçu HTML nécessite un article et des réalisations SemantiK explicites.')
+                                    self._preview_card(section['heading'],f'Gabarit prévu : {section["planned_template_id"]} · Aperçu privé disponible lorsque les sources sont vérifiées')
+                            self._preview_card('Prochaine étape','Composition proposée, non approuvée. Les contenus destinés au Wiki nécessitent une sélection éditoriale et des réalisations SemantiK explicites.')
                         else:
                             self._preview_card('Aucune proposition IA', 'Le registre ne contient pas de composition pour ce Kristal.')
                     else:
@@ -677,7 +788,7 @@ class TemplateManagerApp(tk.Tk):
                 if kind=='proposal':
                     proposal=self.proposals[key[1]]
                     self._preview_line(proposal['title']+' · composition proposée','heading')
-                    self._preview_card('Kristal', proposal['kristal_identity']+' · '+proposal['source_state_ref'])
+                    self._preview_card('Kristal',proposal['kristal_identity'])
                     self._preview_card('Modèle déclaré',proposal['declared_native_model_kind']+' — '+proposal['declared_native_model_description'])
                     self._preview_card('Composition principale',proposal['primary_composition_id'].removeprefix('arketype-'))
                     self._preview_card('Compositions complémentaires',', '.join(c.removeprefix('arketype-') for c in proposal['supplementary_composition_ids']))
@@ -692,10 +803,10 @@ class TemplateManagerApp(tk.Tk):
                             review=None
                             self._preview_card('Revue structurelle invalide',str(exc))
                         if review:
-                            self._preview_card('Source étudiée',f'{review["source"]["assertion_occurrences"]} occurrences v8 · fichier : {review["source"]["portable_state_relative_path"]} · empreinte brute du snapshot (non qualifiée)')
+                            self._preview_card('Revue du Kristal',f'{review["source"]["assertion_occurrences"]} relations étudiées · Composition en révision, non approuvée')
                             self._preview_line('Plan IA du Kristal · layouts spécialisés typés disponibles, contenu SemantiK à fournir','sub')
                             for n,sec in enumerate(review['ordered_structural_sections'],1):
-                                self._preview_card(f'{n}. {sec["heading"]}',f'{sec["source_observation"]["observed_assertion_occurrences"]} assertions inspectées · {sec["planned_template_id"]} · LAYOUT TYPÉ DISPONIBLE · À REMPLIR PAR SEMANTIK')
+                                self._preview_card(f'{n}. {sec["heading"]}',f'Gabarit prévu : {sec["planned_template_id"]} · En attente du contenu SemantiK')
                             for risk in review['exclusions_and_risks']:
                                 self._preview_card('Erreur de lecture à éviter',risk)
                     else:
@@ -884,7 +995,13 @@ def main():
             print('OK - Layouts : ' + str(len(inv['layouts'])))
             print('OK - Archetypes : ' + str(len(inv['profiles'])))
             return 0
-        TemplateManagerApp().mainloop()
+        if '--advanced' in sys.argv:
+            # L'ancien gestionnaire technique reste disponible sans être
+            # le point d'entrée principal de l'atelier.
+            TemplateManagerApp().mainloop()
+        else:
+            from spek.studio_gui import StudioApp
+            StudioApp(ROOT).mainloop()
         return 0
     except Exception as exc:
         detail = traceback.format_exc()

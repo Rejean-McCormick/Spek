@@ -60,7 +60,7 @@ class SourceExplorer(unittest.TestCase):
         self.assertEqual({p['id'] for p in item.evidence_details},{'e.layout','e.tests'})
         self.assertEqual(item.realization_provider,'manual_demo_fixture')
         html=article_html(self.model,'en')
-        self.assertIn(doc.source_sha256,html)
+        self.assertNotIn(doc.source_sha256,html)
         self.assertIn('local_artifact',html)
         self.assertIn('manual_demo_fixture',html)
         self.assertIn('Not supplied',html)

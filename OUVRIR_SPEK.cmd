@@ -1,7 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-title Spek - Atelier de publication
+title Spek - Atelier de composition
 if exist "%~dp0Spek_Template_Manager.pyw" goto run
  echo ERREUR : Spek_Template_Manager.pyw absent.
  pause

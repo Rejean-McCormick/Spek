@@ -84,8 +84,7 @@ def _unit_source(item: DocumentItem, doc: SpekDocument, t: dict) -> str:
        +_token_table(item,t)
        +f'<h5>{esc(t["proofs"])}</h5>'
        +_evidence(item,t)
-       +f'<div class="source-fingerprint"><strong>{esc(t["input"])}</strong> '
-       +f'<code>{esc(doc.source_sha256)}</code></div></article>')
+       +'</article>')
     return details
 
 

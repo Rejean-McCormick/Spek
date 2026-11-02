@@ -43,17 +43,19 @@ class RenderFidelity(unittest.TestCase):
                         self.assertIn(item.trace().replace('_',r'\_'),tex)
                         self.assertEqual(item.evidence_refs,tuple(self.model.item(item.id,lang).get('evidence_refs',[])))
                         self.assertEqual(item.text,self.model.item(item.id,lang)['text'])
-            self.assertIn(doc.source_sha256,html)
-            self.assertIn(doc.layouts_sha256,html)
-            self.assertIn(doc.realizations_sha256,html)
-            self.assertIn(doc.source_sha256,tex)
-            self.assertIn(doc.layouts_sha256,tex)
+            # Technical fingerprints remain in document.json/manifest, never in reading views.
+            self.assertNotIn(doc.source_sha256,html)
+            self.assertNotIn(doc.layouts_sha256,html)
+            self.assertNotIn(doc.realizations_sha256,html)
+            self.assertNotIn(doc.source_sha256,tex)
+            self.assertNotIn(doc.layouts_sha256,tex)
+            self.assertIn('#1e6864',html)
+            self.assertIn('class="brand-mark"',html)
 
     def test_localized_ui_metadata_all_languages(self):
-        for lang,expected in {'fr':'Réalisations:', 'en':'Realizations:', 'it':'Realizzazioni:'}.items():
+        for lang,expected in {'fr':'Traçabilité', 'en':'Traceability', 'it':'Tracciabilità'}.items():
             h=article_html(self.model,lang)
             self.assertIn(expected,h)
-            self.assertNotIn(' · Realizations:',h) if lang!='en' else None
             t=article_tex(self.model,lang)
             self.assertIn(expected,t)
 
@@ -101,7 +103,7 @@ class RenderFidelity(unittest.TestCase):
                             self.assertIn(item.id,contents)
                             self.assertIn(item.status,contents)
                 for digest in (doc.source_sha256,doc.realizations_sha256,doc.layouts_sha256):
-                    self.assertIn(digest,contents)
+                    self.assertNotIn(digest,contents)
                 self.assertIn(' '.join(doc.title.split()),' '.join(contents.split()))
 
     def test_build_outputs_shared_document_sidecars(self):

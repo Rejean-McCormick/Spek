@@ -72,3 +72,12 @@ Ajout d’un lanceur Tkinter `.pyw` local pour naviguer dans `template_library/`
 - Included three layouts and trilingual demonstration outputs.
 - Added a versioned English wiki, integration notes, local Git instructions, and guarded publishing workflows.
 - Explicitly documented missing upstream qualifications and authorization boundaries.
+
+## 2026-11-02 — Refonte de l'atelier opérateur
+
+- Nouveau lanceur principal Spek Studio en quatre espaces : Kristal, Composition, Aperçu Wiki, Publication.
+- Recherche dans les 127 propositions IA existantes, sans inférence de template ni approbation implicite.
+- Inspection privée conditionnée à une revue structurelle et à une correspondance exacte de la source locale.
+- Import SemantiK, vérification et aperçu HTML locaux conservés.
+- Ancien gestionnaire technique conservé en mode `--advanced`, accessible via « Outils avancés ».
+- Interface opérateur sans affichage des empreintes et métadonnées techniques ; identité graphique `#1E6864` et logo existant conservés.
