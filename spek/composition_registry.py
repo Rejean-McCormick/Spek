@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from .core import ValidationError
+from .kristal_identity import canonical_slug
 
 FORMAT = 'spek.wiki-ai-composition/1.0'
 INDEX_FORMAT = 'spek.wiki-ai-composition-registry/1.0'
@@ -90,11 +91,11 @@ def read_registry(root: Path) -> dict[str, Any]:
     for key, row in assigned.items():
         if not isinstance(row, dict) or row.get('composition_id') not in compositions:
             raise ValidationError('Assignation avec composition inconnue : ' + str(key))
-        if row.get('kristal_identity') != key or not isinstance(row.get('state_sha256'), str) or not re.fullmatch(r'[a-f0-9]{64}', row['state_sha256']):
+        if row.get('kristal_identity') != key or canonical_slug(key) != key or not isinstance(row.get('state_sha256'), str) or not re.fullmatch(r'[a-f0-9]{64}', row['state_sha256']):
             raise ValidationError('Assignation incomplète pour ' + str(key))
     return {'index': index, 'compositions': compositions, 'assignments': assigned}
 
 
 def assignment_for_identity(registry: dict, identity: str) -> dict | None:
     """Only exact registry IDs count: no heuristics, no title-based matching."""
-    return registry['assignments'].get(identity)
+    return registry['assignments'].get(canonical_slug(identity))

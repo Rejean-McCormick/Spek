@@ -13,7 +13,10 @@ from pathlib import Path
 from typing import Any
 
 from .core import ValidationError
+from .kristal_identity import canonical_slug
 from .composition_registry import assignment_for_identity, read_registry
+from .ai_proposals import proposal_for_identity, read_proposals
+from .source_reviews import read_source_reviews, compare_raw_state_snapshot
 
 
 def _read_small_json(path: Path) -> dict[str, Any] | None:
@@ -39,16 +42,21 @@ def inspect_kristal(folder: Path, spek_root: Path) -> dict[str, Any]:
     state_index = _read_small_json(folder/'canon'/'state.index.json')
     if workspace is None and state_index is None:
         raise ValidationError('Dossier non identifié : ni kristal.workspace.json ni canon/state.index.json')
-    identity = workspace.get('slug') if workspace else None
+    declared_identity = workspace.get('slug') if workspace else None
+    identity = canonical_slug(declared_identity) if isinstance(declared_identity,str) else None
     registry = read_registry(spek_root)
     assignment = assignment_for_identity(registry, identity) if isinstance(identity,str) else None
+    proposals = read_proposals(spek_root,registry)
+    proposal = proposal_for_identity(proposals, identity) if isinstance(identity, str) else None
+    review = read_source_reviews(spek_root,proposals).get(identity) if isinstance(identity,str) else None
+    snapshot_check = compare_raw_state_snapshot(folder,review) if review else 'NOT_REVIEWED'
     return {
-        'folder': str(folder), 'identity': identity, 'title': workspace.get('title') if workspace else None,
+        'folder': str(folder), 'identity': identity, 'declared_identity': declared_identity, 'title': workspace.get('title') if workspace else None,
         'state_ref': workspace.get('state_ref') if workspace else None,
         'workspace_format': workspace.get('format') if workspace else None,
         'native_model': workspace.get('native_model', {}).get('kind') if workspace and isinstance(workspace.get('native_model'),dict) else None,
         'has_state_index': state_index is not None,
-        'assignment': assignment, 'assignment_state_pin_verified': False,
+        'assignment': assignment, 'proposal': proposal, 'structure_review': review, 'source_snapshot_comparison': snapshot_check, 'assignment_state_pin_verified': False,
         'composition': registry['compositions'].get(assignment['composition_id']) if assignment else None,
         'mode': 'inspection_metadata_only_no_inference',
     }

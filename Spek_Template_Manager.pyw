@@ -107,6 +107,7 @@ def _load_spek(repository):
         validate_category, validate_family_template, validate_layout, validate_profile,
     )
     from spek.composition_registry import read_registry
+    from spek.ai_proposals import read_proposals
     from spek.studio_workflow import inspect_kristal, execute_preview
     globals().update(locals())
 
@@ -130,6 +131,7 @@ class TemplateManagerApp(tk.Tk):
         self.kristal_details = None
         self.preview_busy = False
         self.registry = None
+        self.proposals = {}
         self.guide_var = tk.StringVar()
         self.next_steps_var = tk.StringVar()
         self._build()
@@ -310,8 +312,10 @@ class TemplateManagerApp(tk.Tk):
         if self.kristal_details:
             if self.kristal_details.get('assignment'):
                 self.next_steps_var.set('Étapes suivantes : 1) clique sur « Voir la composition » ; 2) inspecte la recette assignée ; 3) quand tu auras un article.json + realizations.json correspondant, utilise « Ouvrir un article… » pour voir le rendu.')
+            elif self.kristal_details.get('proposal'):
+                self.next_steps_var.set('Étapes suivantes : ouvre « Voir la composition » pour consulter les sections proposées par l’IA. Elles attendent la vérification des sources avant une vraie prévisualisation.')
             else:
-                self.next_steps_var.set('Étapes suivantes : ce Kristal n’a pas encore de composition assignée. Parcours les compositions IA à gauche ou attends le registre d’assignation.')
+                self.next_steps_var.set('Étapes suivantes : ce Kristal n’a pas encore de composition proposée. Le registre ne contient aucune correspondance.')
             return
         self.next_steps_var.set('Étapes suivantes : ouvre un Kristal pour comprendre sa projection, ou ouvre un article Spek pour voir directement le rendu final.')
 
@@ -320,26 +324,38 @@ class TemplateManagerApp(tk.Tk):
         state='normal' if active else 'disabled'
         self.verify_button.configure(state=state)
         self.preview_button.configure(state=state)
-        recipe_state = 'normal' if (self.kristal_details and self.kristal_details.get('assignment') and not self.preview_busy) else 'disabled'
+        recipe_state = 'normal' if (self.kristal_details and (self.kristal_details.get('assignment') or self.kristal_details.get('proposal')) and not self.preview_busy) else 'disabled'
         self.goto_recipe_button.configure(state=recipe_state)
         for control in (self.open_article_button,self.open_kristal_button,self.change_root_button):
             control.configure(state='disabled' if self.preview_busy else 'normal')
         self._refresh_next_steps()
 
     def _show_workspace(self):
+        # Tk does not emit a new selection event if the workspace is already selected.
+        # A newly opened Kristal must repaint its name and proposed composition.
         for iid,key in self.node_map.items():
             if key==('workspace',):
                 self.tree.selection_set(iid)
                 self.tree.see(iid)
                 self.on_select()
                 break
+        title = None
+        if self.kristal_details:
+            title = self.kristal_details.get('title') or self.kristal_details.get('identity')
+        self.header_var.set('Mon travail · ' + str(title or 'Projet Spek'))
+        self.preview()
         self.notebook.select(self.tab_preview)
 
     def goto_assigned_recipe(self):
-        if not (self.kristal_details and self.kristal_details.get('assignment')):
-            messagebox.showinfo('Spek','Aucune composition n’est assignée au Kristal actuellement ouvert.',parent=self)
+        if not self.kristal_details:
             return
-        target=('recipe', self.kristal_details['assignment']['composition_id'])
+        if self.kristal_details.get('assignment'):
+            target=('recipe', self.kristal_details['assignment']['composition_id'])
+        elif self.kristal_details.get('proposal'):
+            target=('proposal', self.kristal_details['identity'])
+        else:
+            messagebox.showinfo('Spek','Aucune composition proposée pour ce Kristal.',parent=self)
+            return
         for iid,key in self.node_map.items():
             if key == target:
                 self._expand_parents(iid)
@@ -371,7 +387,10 @@ class TemplateManagerApp(tk.Tk):
         if not folder:return
         try:
             self.kristal_details=inspect_kristal(Path(folder),self.root_folder)
-            self.context_var.set('Kristal ouvert : '+str(self.kristal_details['identity'] or Path(folder).name)+' · Lecture seule · Spek montre la composition prescrite mais ne génère pas encore la page finale.')
+            state = 'composition proposée par l’IA, non approuvée' if self.kristal_details.get('proposal') else 'aucune composition proposée'
+            if self.kristal_details.get('assignment'):
+                state = 'assignation présente, état source non revérifié ici'
+            self.context_var.set('Kristal ouvert : '+str(self.kristal_details['identity'] or Path(folder).name)+' · '+state+' · Lecture seule, aucune publication.')
             self._status('Métadonnées Kristal ouvertes ; aucune projection générée')
             self._update_buttons();self._show_workspace();self._refresh_guide()
         except (ValueError,OSError,ValidationError) as e:self._error('Lecture Kristal',e)
@@ -442,8 +461,10 @@ class TemplateManagerApp(tk.Tk):
             self.node_map[book]=('root',)
             try:
                 self.registry=read_registry(self.root_folder)
+                self.proposals=read_proposals(self.root_folder,self.registry)
             except (OSError,ValueError,ValidationError) as exc:
                 self.registry=None
+                self.proposals={}
                 self._status('Registre IA inaccessible : '+str(exc))
             for cat in self.inv['categories']:
                 n=cat['id'];enabled='actif' if cat['status']=='implemented' else 'réservé'
@@ -456,11 +477,17 @@ class TemplateManagerApp(tk.Tk):
                         child=self.tree.insert(branch,'end',text=slug)
                         self.node_map[child]=('profile',slug)
                 if n=='wiki' and self.registry:
-                    recipes=self.tree.insert(folder,'end',text=f'Compositions IA prescrites ({len(self.registry["compositions"])})',open=False)
+                    recipes=self.tree.insert(folder,'end',text=f'Compositions IA candidates ({len(self.registry["compositions"])})',open=False)
                     self.node_map[recipes]=('recipes',)
                     for cid in sorted(self.registry['compositions']):
                         item=self.tree.insert(recipes,'end',text=cid.removeprefix('arketype-'))
                         self.node_map[item]=('recipe',cid)
+                    if self.proposals:
+                        branch=self.tree.insert(folder,'end',text=f'Kristals · compositions proposées ({len(self.proposals)})',open=False)
+                        self.node_map[branch]=('proposals',)
+                        for slug,proposal in sorted(self.proposals.items()):
+                            item=self.tree.insert(branch,'end',text=proposal['title']+'  ['+slug+']')
+                            self.node_map[item]=('proposal',slug)
                 drafts=self.inv['templates'].get(n,[])
                 if drafts:
                     branch=self.tree.insert(folder,'end',text=f'Templates de catégorie ({len(drafts)})',open=True)
@@ -552,12 +579,13 @@ class TemplateManagerApp(tk.Tk):
 
     def preview(self):
         for child in self.inner.winfo_children():child.destroy()
+        self.canvas.yview_moveto(0)
         if not self.selection:
             self._preview_line('Choisis un élément à gauche pour voir son rôle dans le workflow.','heading');return
         key=self.selection;kind=key[0]
         self._preview_line('Aperçu et mode d’emploi', 'heading')
         try:
-            if kind in {'root','layouts','profiles','drafts','recipes','workspace','recipe'}:
+            if kind in {'root','layouts','profiles','drafts','recipes','workspace','recipe','proposals','proposal'}:
                 if kind=='workspace':
                     self._preview_line('Votre projet Spek', 'heading')
                     self._preview_line('Utilise cette vue comme tableau de bord. Elle te dit où tu en es et quoi faire ensuite.')
@@ -570,15 +598,62 @@ class TemplateManagerApp(tk.Tk):
                     if self.kristal_details:
                         obj=self.kristal_details
                         self._preview_card('Kristal ouvert · lecture seule',obj['folder'])
-                        self._preview_card('Identité déclarée',str(obj['identity'] or 'non déclarée'))
+                        self._preview_card('Slug actuel',str(obj['identity'] or 'non déclaré'))
+                        if obj.get('declared_identity') != obj.get('identity'):
+                            self._preview_card('Slug dans le fichier ouvert (ancienne forme)', str(obj.get('declared_identity')))
                         self._preview_card('Titre déclaré',str(obj.get('title') or 'non déclaré'))
                         self._preview_card('Modèle natif déclaré',str(obj['native_model'] or 'non déclaré'))
                         if obj['assignment']:
                             self._preview_card('Composition assignée',obj['assignment']['composition_id']+' — utilise le bouton « Voir la composition » pour l’inspecter.')
+                        elif obj.get('proposal'):
+                            candidate=obj['proposal']
+                            self._preview_card('Proposition IA · à vérifier',candidate['primary_composition_id']+' + '+', '.join(candidate['supplementary_composition_ids']))
+                            self._preview_line('Sections proposées pour ce Kristal (contenu non réalisé) :','sub')
+                            for n,section in enumerate(candidate['ordered_sections'],1):
+                                self._preview_card(f'{n}. {section["proposed_function"]}',section['layout_id']+' · '+section['composition_id'].removeprefix('arketype-'))
+                            if obj.get('structure_review'):
+                                rev=obj['structure_review']
+                                self._preview_card('Étude canonique disponible',f'{rev["source"]["assertion_occurrences"]} occurrences d’assertions v8 inspectées. Comparaison de l’état local : '+obj['source_snapshot_comparison'])
+                                for section in rev['ordered_structural_sections']:
+                                    self._preview_card(section['heading'],f'{section["source_observation"]["observed_assertion_occurrences"]} occurrences · Gabarit à développer : {section["planned_template_id"]}')
+                            self._preview_card('Important','Étude IA non approuvée. Aucune assertion n’est sélectionnée pour publier. L’aperçu HTML nécessite un article et des réalisations SemantiK explicites.')
                         else:
-                            self._preview_card('Aucune assignation IA', 'Le registre n’associe pas encore de composition à ce Kristal. Spek n’en déduit pas une automatiquement.')
+                            self._preview_card('Aucune proposition IA', 'Le registre ne contient pas de composition pour ce Kristal.')
                     else:
                         self._preview_card('Pas de Kristal ouvert','Ouvre un Kristal si tu veux voir quelle composition lui est prescrite.')
+                    return
+                if kind=='proposals':
+                    self._preview_line('127 propositions de composition créées par l’IA','heading')
+                    self._preview_line('Sélectionne un Kristal sous cette rubrique. Spek affiche les choix déjà prescrits sans analyser son contenu.')
+                    self._preview_card('Statut','Propositions documentaires basées sur le rapport du Manager · aucune qualification des sources ni publication')
+                    return
+                if kind=='proposal':
+                    proposal=self.proposals[key[1]]
+                    self._preview_line(proposal['title']+' · composition proposée','heading')
+                    self._preview_card('Kristal', proposal['kristal_identity']+' · '+proposal['source_state_ref'])
+                    self._preview_card('Modèle déclaré',proposal['declared_native_model_kind']+' — '+proposal['declared_native_model_description'])
+                    self._preview_card('Composition principale',proposal['primary_composition_id'].removeprefix('arketype-'))
+                    self._preview_card('Compositions complémentaires',', '.join(c.removeprefix('arketype-') for c in proposal['supplementary_composition_ids']))
+                    for n,section in enumerate(proposal['ordered_sections'],1):
+                        self._preview_card(f'{n}. {section["proposed_function"]}',section['layout_id']+' / '+section['section_id']+' · '+section['composition_id'].removeprefix('arketype-'))
+                    self._preview_card('Justification IA',proposal['editorial_rationale'])
+                    if proposal.get('canonical_review_status')=='DEEP_SOURCE_INSPECTION_NOT_APPROVED':
+                        try:
+                            from spek.source_reviews import read_source_reviews
+                            review=read_source_reviews(self.root_folder,self.proposals).get(key[1])
+                        except (OSError,ValueError,ValidationError) as exc:
+                            review=None
+                            self._preview_card('Revue structurelle invalide',str(exc))
+                        if review:
+                            self._preview_card('Source étudiée',f'{review["source"]["assertion_occurrences"]} occurrences v8 · fichier : {review["source"]["portable_state_relative_path"]} · empreinte brute du snapshot (non qualifiée)')
+                            self._preview_line('Plan documentaire spécifique au Kristal · layouts spécialisés encore à développer','sub')
+                            for n,sec in enumerate(review['ordered_structural_sections'],1):
+                                self._preview_card(f'{n}. {sec["heading"]}',f'{sec["source_observation"]["observed_assertion_occurrences"]} assertions inspectées · {sec["planned_template_id"]} · NON IMPLÉMENTÉ')
+                            for risk in review['exclusions_and_risks']:
+                                self._preview_card('Erreur de lecture à éviter',risk)
+                    else:
+                        self._preview_card('Analyse détaillée en attente','Le rapport Manager ne contient pas encore le graphe canonique de ce Kristal.')
+                    self._preview_card('Non publiable','Les sections spécialisées ci-dessus sont des spécifications. Les assertions n’ont pas été sélectionnées, les contrats de rendu ne sont pas implémentés et les autorisations restent à obtenir.')
                     return
                 if kind=='recipe':
                     recipe=self.registry['compositions'][key[1]]
