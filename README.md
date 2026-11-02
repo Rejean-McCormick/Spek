@@ -30,6 +30,14 @@ Spek is an **autonomous, local-first semantic publishing engine** that assembles
 | Operations | CI preview, manual fail-closed GitHub Pages workflow, local site verifier |
 | Documentation | Detailed `/docs` plus a complete English GitHub wiki source in `/wiki` |
 
+## Atelier Spek optimisé (Windows)
+
+Lancer **`OUVRIR_SPEK.cmd`** ou **`Spek_Template_Manager.pyw`** pour ouvrir une **interface de travail unique** : charger un `article.json` et ses `realizations.json`, vérifier avec le moteur Spek, puis prévisualiser le HTML **local et non publié**. On peut aussi ouvrir un Kristal en lecture seule pour voir ses métadonnées et les éventuelles compositions explicitement assignées.
+
+La bibliothèque est regroupée sous `template_library/`. Le catalogue Wiki inclut **19 compositions IA candidates**, sans assignation automatique ni génération de faits. Le gestionnaire de catégories et layouts, son éditeur JSON et les sauvegardes avec contrôle d'empreintes restent disponibles de manière contextuelle. Le vieux `OUVRIR_TEMPLATES.cmd` ouvre le même atelier, et `START_SPEK.bat` ouvrent le même atelier ; la démonstration CLI préexistante est conservée sous `DEMO_SPEK_LOCAL.bat`.
+
+[Documentation et scénarios de l'atelier](docs/ATELIER_OPTIMISE_IA_V2.md) · [Gestion des templates](docs/TEMPLATE_MANAGER_GUI.md).
+
 ## Try it locally
 
 Requirements: **Python 3.10+**. No external service is called while compiling. PDFs use ReportLab and installed Unicode TrueType fonts (`requirements.txt`); HTML and TeX can be generated with Python's standard library. Regression tests additionally use `pypdf`.

@@ -1,3 +1,16 @@
+## 2026-11-01 — Spek Atelier UX v2 (local, no release/publish)
+
+- New unified primary workflow `open → check → preview`, implemented in existing `.pyw` launcher, accessible with `START_SPEK.bat` or `OUVRIR_SPEK.cmd`; former demo preserved as `DEMO_SPEK_LOCAL.bat`.
+- Read-only Kristal metadata opener; no recursive content scan or automatic template selection.
+- 19 AI-designed Wiki editorial compositions included under `template_library/wiki/compositions/`; assignment registry intentionally empty pending source evidence.
+- Advanced/contextual editor retained with backups, concurrency protection and additional composition-layout reference safeguards.
+- Real local HTML preview uses existing Spek compiler, never a simulated or published result.
+- UX audit aligned with supplied AI interface guide v2, documented in `docs/ATELIER_OPTIMISE_IA_V2.md`.
+
+## Gestionnaire de templates (2026-11-01)
+
+Ajout d’un lanceur Tkinter `.pyw` local pour naviguer dans `template_library/`, éditer les profils Wiki et les contrats de layouts, dupliquer/créer des brouillons, valider avec sauvegardes et protections contre les modifications concurrentes. Pas de moteur de publication ajouté.
+
 # Changelog
 
 ## Spek template library organization — 2026-11-01

@@ -1,0 +1,40 @@
+{
+  "format": "spek.wiki-kristal-composition-assignments/1.0",
+  "revision": "2026-11-01/1",
+  "source_inventory": "awaiting_Kristal_Manager_report_of_127",
+  "intended_scope": "127 Kristals mentioned by user; count is not independently verified",
+  "policy": {
+    "author": "AI_using_real_kristal_reports_and_state_evidence",
+    "runtime_inference_allowed": false,
+    "require_explicit_review": true,
+    "no_edit_canonical_kristal_state": true,
+    "no_publishing_authority": true,
+    "require_state_fingerprint": true,
+    "require_selected_semantic_paths": true,
+    "require_approval_of_final_realized_page": true
+  },
+  "assignments": {},
+  "assignment_contract": {
+    "kristal_identity": "real stable Kristal identity from Manager report",
+    "source_state_ref": "immutable state ref or digest; not a path guessed from name",
+    "state_sha256": "64 hex SHA-256 of the inspected source state",
+    "primary_archetype": "confirmed or explicitly marked provisional",
+    "composition_id": "key in composition-registry.json",
+    "supplementary_composition_ids": [
+      "optional additional reviewed recipe IDs"
+    ],
+    "section_bindings": [
+      {
+        "section_id": "section from recipe",
+        "semantic_source_paths": [
+          "explicit path(s) from actual Kristal"
+        ],
+        "assertion_ids": [
+          "explicit selected assertions, never guessed"
+        ]
+      }
+    ],
+    "editorial_review": "pending_or_approved",
+    "publication_authorization": "separate_C1_C2_C3_process"
+  }
+}

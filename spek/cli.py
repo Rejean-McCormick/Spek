@@ -16,6 +16,7 @@ from .ai_phrases import import_ai
 from .education import import_educational
 from .wiki import build_wiki, verify_wiki, load_profiles
 from .template_library import list_template_categories
+from .composition_registry import read_registry
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -208,6 +209,8 @@ def main(argv=None):
     wb.add_argument('--demonstration',action='store_true',help='Only for fixture previews, never a publication authorization')
     wv=sub.add_parser('verify-wiki',help='Verify the SHA-256 inventory of a private draft')
     wv.add_argument('path')
+    sub.add_parser('list-wiki-compositions',help='List explicit AI editorial wiki recipes; never assign them')
+    sub.add_parser('check-wiki-compositions',help='Validate AI wiki recipes and their layout contracts')
     sub.add_parser('list-template-categories',help='List template families under template_library')
     wl=sub.add_parser('list-wiki-templates',help='List Spek Wiki layouts allowed by each Arketype')
     wl.add_argument('--templates',default=str(ROOT/'template_library'/'wiki'/'archetype-profiles.json'))
@@ -230,6 +233,14 @@ def main(argv=None):
         elif args.command=='verify-wiki':
             manifest=verify_wiki(Path(args.path))
             print('WIKI VERIFIED: '+str(len(manifest['files']))+' Markdown files (NOT publication approval)')
+        elif args.command in ('list-wiki-compositions','check-wiki-compositions'):
+            records = read_registry(ROOT)
+            if args.command == 'list-wiki-compositions':
+                for cid, recipe in sorted(records['compositions'].items()):
+                    seq = ' → '.join(s['layout_id'] for s in recipe['sections_in_order'])
+                    print(f'{cid}: {seq}')
+            else:
+                print(f'PASS: {len(records["compositions"])} AI-authored recipes · {len(records["assignments"])} explicit assignments · no runtime inference')
         elif args.command=='list-template-categories':
             for cat in list_template_categories():
                 print(f"{cat['id']} : {cat['status']} — {cat['description']}")
