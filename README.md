@@ -38,6 +38,17 @@ La bibliothèque est regroupée sous `template_library/`. Le catalogue Wiki incl
 
 [Documentation et scénarios de l'atelier](docs/ATELIER_OPTIMISE_IA_V2.md) · [Gestion des templates](docs/TEMPLATE_MANAGER_GUI.md).
 
+## Rédaction des templates avec SemantiK Architect (atelier privé)
+
+L'atelier distingue maintenant le **plan documentaire**, qui n'affiche aucun triplet brut,
+du **Wiki rédigé**, qui exige les réalisations fournies par SemantiK Architect.
+L'action **« Réaliser avec SemantiK… »** exécute uniquement les requêtes déjà
+associées explicitement aux champs du template, puis vérifie leurs résultats
+avant de les assembler. Sans RuntimeSet GF/PGF utilisable, le travail est bloqué
+sans texte fictif ni publication.
+
+[Guide : réalisations SemantiK et templates](docs/REALISATION_SEMANTIK_TEMPLATES_2026-11-02_FR.md).
+
 ## Try it locally
 
 Requirements: **Python 3.10+**. No external service is called while compiling. PDFs use ReportLab and installed Unicode TrueType fonts (`requirements.txt`); HTML and TeX can be generated with Python's standard library. Regression tests additionally use `pypdf`.

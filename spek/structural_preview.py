@@ -98,66 +98,8 @@ def _read_source(folder: Path, review: dict) -> tuple[list[dict], str]:
     return assertions, current
 
 
-def _term(value: Any) -> str:
-    """Represent a raw term as source data, not a translated or interpreted label."""
-    if isinstance(value,dict):
-        kind = value.get('kind')
-        item = value.get('id') if 'id' in value else value.get('value')
-        if item is not None:
-            return (str(kind) + ': ' if kind else '') + str(item)
-        return json.dumps(value, ensure_ascii=False, sort_keys=True)
-    if isinstance(value,(str,int,float,bool)) or value is None:
-        return str(value)
-    return json.dumps(value,ensure_ascii=False,sort_keys=True)
-
-
-def _items(assertions: list[dict], positions: list[int]):
-    for position in positions:
-        record=assertions[position]
-        statement=record.get('statement') or {}
-        if not isinstance(statement,dict): statement={}
-        yield {
-            'position':position,
-            'id':str(record.get('assertion_id','(identifiant absent)')),
-            'subject':_term(statement.get('subject','(absent)')),
-            'predicate':_term(statement.get('predicate','(absent)')),
-            'object':_term(statement.get('object','(absent)')),
-            'status':str(record.get('assertion_status','(non déclaré)')),
-            'evidence':record.get('evidence_refs') if isinstance(record.get('evidence_refs'),list) else [],
-        }
-
-
-def _render_section_rows(kind: str, records: list[dict]) -> str:
-    """Only source-declared relational terms; no internal IDs or audit metadata.
-
-    These raw relationships are deliberately collapsed in a *private* HTML
-    document. No provenance reference, hash, source path, assertion position,
-    or status is serialized into the browser markup.
-    """
-    if not records:
-        return '<p class="empty">Aucune relation disponible pour cette section.</p>'
-    if kind == 'provenance':
-        return ('<p class="empty">Les références de preuve sont consultables '
-                'dans le dossier canonique par un outil d’audit autorisé. '
-                'Elles ne sont pas intégrées dans cet aperçu.</p>')
-    if kind in ('network', 'chain', 'trajectory', 'taxonomy'):
-        glyph = {'network': '↔', 'chain': '→', 'trajectory': '↝', 'taxonomy': '↳'}[kind]
-        return ''.join(
-            '<div class="relation"><div class="rel-grid">'
-            f'<span class="term">{_h(r["subject"])}</span>'
-            f'<span class="operator"><span aria-hidden="true">{glyph}</span> {_h(r["predicate"])}</span>'
-            f'<span class="term">{_h(r["object"])}</span>'
-            '</div></div>' for r in records)
-    out=['<div class="table-scroll"><table><thead><tr><th>Sujet</th><th>Relation</th><th>Valeur déclarée</th></tr></thead><tbody>']
-    for r in records:
-        out.append('<tr>'
-                   f'<td>{_h(r["subject"])}</td><td>{_h(r["predicate"])}</td>'
-                   f'<td>{_h(r["object"])}</td></tr>')
-    return ''.join(out)+'</tbody></table></div>'
-
-
 def _render_document(info: dict, review: dict, assertions: list[dict], digest: str, contracts: dict) -> str:
-    """Human-centered, offline private preview; digest is never emitted."""
+    """Plan privé, sans triplets bruts ou texte improvisé; digest jamais émis."""
     slug = info['identity']
     title = info.get('title') or slug
     sections = review['ordered_structural_sections']
@@ -166,26 +108,23 @@ def _render_document(info: dict, review: dict, assertions: list[dict], digest: s
     for idx, part in enumerate(sections, 1):
         template = part['planned_template_id']
         contract = contracts[template]
-        positions = part['source_observation']['source_positions_zero_based']
-        rows = list(_items(assertions, positions))
         sec_id = 's'+str(idx)
         links.append(f'<a href="#{sec_id}"><span class="nav-num">{idx:02d}</span>'
                      f'<span>{_h(part["heading"])}</span></a>')
-        subtitle = part.get('editorial_intent', '')
         blocks.append(
             f'<section class="section-card" id="{sec_id}" aria-labelledby="h-{sec_id}">'
-            f'<p class="section-label">Partie {idx} · Aperçu structurel</p>'
+            f'<p class="section-label">Partie {idx} · Plan documentaire</p>'
             f'<h2 id="h-{sec_id}">{_h(part["heading"])}</h2>'
-            f'<p class="sub">Gabarit prescrit · <code>{_h(template)}</code></p>'
-            f'<p class="description">{_h(subtitle)}</p>'
-            '<details class="relations"><summary>Consulter les relations déclarées'
-            '<span class="summary-help"> (données privées)</span></summary>'
-            '<p class="source-help">Données brutes en lecture seule, présentées '
-            'pour comprendre la composition. Elles ne constituent pas un texte '
-            'éditorial approuvé.</p>'
-            + _render_section_rows(contract['preview_kind'],rows)
-            + '</details></section>')
-    risks = ''.join(f'<li>{_h(r)}</li>' for r in review.get('exclusions_and_risks', []))
+            f'<p class="sub">Présentation prévue · {_h(contract["label"])}</p>'
+            '<div class="pending">'
+            '<strong>Texte en attente de réalisation SemantiK</strong>'
+            '<p>Cette section est prévue dans la composition. Les phrases seront '
+            'affichées ici uniquement après sélection des faits, réalisation '
+            'linguistique par SemantiK Architect et contrôle des résultats.</p>'
+            '</div>'
+            '</section>'
+        )
+    risks = '<li>La composition doit être revue et les faits sélectionnés avant toute publication.</li>'
     logo = logo_svg()
     # No original source hash, path, evidence IDs or audit manifest is shipped
     # in the HTML, even as hidden markup or script state.
@@ -194,7 +133,7 @@ def _render_document(info: dict, review: dict, assertions: list[dict], digest: s
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'none'; form-action 'none'; base-uri 'none'">
-<title>{_h(title)} · Atelier Spek · aperçu privé</title>
+<title>{_h(title)} · Atelier Spek · plan privé</title>
 <style>
 :root{{color-scheme:light;--accent:#1e6864;--dark:#154d4a;--soft:#e4f2ef;--paper:#f6f9f8;--ink:#142329;--muted:#64717a;--line:#dbe7e4;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--paper);color:var(--ink)}}
 *{{box-sizing:border-box}} html{{scroll-behavior:smooth}}body{{margin:0;line-height:1.55}}
@@ -219,7 +158,7 @@ nav a:last-child{{border-top:1px solid var(--line);border-radius:0;margin-top:16
 .relations{{border-top:1px solid #e8efed;padding-top:13px}}details>summary{{cursor:pointer;color:var(--accent);font-weight:750;list-style:none;padding:8px 0}}details>summary::before{{content:'›';display:inline-block;margin-right:10px;font-size:1.4rem;vertical-align:-1px}}details[open]>summary::before{{transform:rotate(90deg)}}.summary-help{{font-size:.83rem;font-weight:450;color:var(--muted)}}.source-help{{color:var(--muted);font-size:.87rem}}
 .relation{{border:1px solid var(--line);border-radius:9px;margin:10px 0;padding:13px 15px;background:#fbfdfc;overflow-wrap:anywhere}}
 .rel-grid{{display:grid;grid-template-columns:minmax(0,1fr) minmax(90px,auto) minmax(0,1fr);gap:14px;align-items:center}}.operator{{color:var(--accent);font-size:.88rem;text-align:center}}.term{{overflow-wrap:anywhere}}
-.table-scroll{{overflow-x:auto}}table{{border-collapse:collapse;width:100%;font-size:.87rem}}th,td{{border-bottom:1px solid var(--line);text-align:left;padding:11px;overflow-wrap:anywhere}}th{{background:var(--soft)}}.empty{{color:var(--muted)}}.footer-note{{color:var(--muted);font-size:.86rem;margin:24px 6px}}
+.table-scroll{{overflow-x:auto}}table{{border-collapse:collapse;width:100%;font-size:.87rem}}th,td{{border-bottom:1px solid var(--line);text-align:left;padding:11px;overflow-wrap:anywhere}}th{{background:var(--soft)}}.pending{{border:1px solid var(--line);background:var(--soft);border-radius:11px;padding:18px 20px;color:var(--dark)}}.pending strong{{display:block;margin-bottom:5px}}.pending p{{margin:0;color:#47645f}}.empty{{color:var(--muted)}}.footer-note{{color:var(--muted);font-size:.86rem;margin:24px 6px}}
 a:focus-visible,summary:focus-visible{{outline:3px solid #71aba6;outline-offset:3px}}
 @media(max-width:900px){{.hero{{display:block}}.pills{{margin-top:16px}}.shell{{grid-template-columns:1fr}}nav{{position:static}}nav a{{display:inline-flex;margin:2px 1px}}nav a:last-child{{border-top:none;padding:10px 11px;margin-top:2px}}}}
 @media(max-width:560px){{.brand-row{{padding:13px 18px}}.brand-mark{{width:52px}}.brand-copy{{padding-left:12px}}.brand-copy strong{{font-size:.9rem}}.wrapper{{padding:14px}}.section-card{{padding:21px 18px}}.hero{{padding:19px 17px}}.rel-grid{{display:block}}.operator{{display:block;padding:5px 0;text-align:left}}.summary-help{{display:none}}}}
@@ -228,13 +167,13 @@ a:focus-visible,summary:focus-visible{{outline:3px solid #71aba6;outline-offset:
 <body><a class="skip" href="#content">Passer au contenu</a>
 <header><div class="brand-row">{logo}<div class="brand-copy"><strong>SPEK · Atelier de composition</strong>
 <span class="object">{_h(title)}</span> <span class="slug">({_h(slug)})</span></div></div></header>
-<div class="wrapper"><div class="hero"><div><h1>Aperçu structurel privé — brouillon non publiable</h1>
-<p>Explore la composition proposée pour ce Kristal. Aucun texte final n’a encore été produit.</p></div>
-<div class="pills"><span class="pill">◈ Aperçu privé</span><span class="pill">▤ {len(sections)} sections</span><span class="pill">✎ Proposition IA</span></div></div>
+<div class="wrapper"><div class="hero"><div><h1>Plan documentaire privé — textes en attente</h1>
+<p>Plan de lecture préparé. Les textes des sections doivent être réalisés par SemantiK Architect.</p></div>
+<div class="pills"><span class="pill">◈ Plan privé</span><span class="pill">▤ {len(sections)} sections</span><span class="pill">✎ Réalisation en attente</span></div></div>
 <div class="shell"><nav aria-label="Plan du Kristal"><h2>Plan du Kristal</h2>{''.join(links)}<a href="#risks">Limites et précautions</a></nav>
-<main id="content"><p class="notice">Ces vues présentent uniquement des relations déclarées. Elles ne démontrent pas, à elles seules, de causalité, de chronologie, de hiérarchie ou d’équilibrage comptable.</p>
+<main id="content"><p class="notice">Cet écran est un plan documentaire, pas une publication. Les données canoniques brutes ne sont pas affichées comme du texte.</p>
 {''.join(blocks)}<section class="section-card" id="risks"><p class="section-label">À consulter</p><h2>Limites et précautions</h2><ul>{risks}</ul>
-<p>Cette proposition doit être revue avant toute réalisation linguistique ou publication.</p></section>
+<p>Pour voir un véritable Wiki rédigé, utilise « Réaliser avec SemantiK » dans l’atelier, avec un article et des requêtes explicites, puis « Prévisualiser le Wiki ».</p></section>
 <p class="footer-note">SPEK · Atelier local de composition · Document privé, sans autorisation de publication.</p>
 </main></div></div></body></html>'''
 

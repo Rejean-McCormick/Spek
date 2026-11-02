@@ -18,6 +18,7 @@ import webbrowser
 from .ai_proposals import read_proposals
 from .composition_registry import read_registry
 from .core import ValidationError
+from .local_kristals import discover_locals_root, find_local_kristal, save_locals_root, validate_locals_root
 from .studio_view_model import display_name, filter_catalog, resolve_display, template_label
 from .studio_workflow import execute_preview, inspect_kristal, project_pair
 
@@ -62,6 +63,9 @@ class StudioApp(tk.Tk):
         self.registry = read_registry(self.root_folder)
         self.proposals = read_proposals(self.root_folder, self.registry)
         self.browsed_slug: str | None = None
+        self.locals_root: Path | None = discover_locals_root(self.root_folder)
+        self.local_candidate: Path | None = None
+        self.local_lookup_issue: str | None = None
         self.kristal_details: dict | None = None
         self.article_path: Path | None = None
         self.realizations_path: Path | None = None
@@ -151,6 +155,12 @@ class StudioApp(tk.Tk):
         self.search.bind('<KeyRelease>', lambda _: self._refresh_catalog())
         self.count_var = tk.StringVar(value='')
         ttk.Label(left, textvariable=self.count_var, style='Small.TLabel').pack(anchor='w', pady=(0, 7))
+        locals_row = ttk.Frame(left)
+        locals_row.pack(fill='x', pady=(0, 9))
+        self.locals_status = tk.StringVar(value='')
+        ttk.Label(locals_row, textvariable=self.locals_status, style='Small.TLabel',
+                  wraplength=170).pack(side='left', fill='x', expand=True)
+        ttk.Button(locals_row, text='Dossier locals…', command=self.choose_locals_root).pack(side='right')
         tree_box = ttk.Frame(left)
         tree_box.pack(fill='both', expand=True)
         self.catalog = ttk.Treeview(tree_box, show='tree', selectmode='browse', style='Catalog.Treeview')
@@ -204,15 +214,35 @@ class StudioApp(tk.Tk):
         if slug == self.browsed_slug:
             return
         # A catalogue consultation is explicitly NOT a local canonical source inspection.
+        # Never carry an article from the previous Kristal into the new context.
+        self.article_path = None
+        self.realizations_path = None
+        self.preview_ready = False
         self.browsed_slug = slug
         self.kristal_details = None
         self._refresh_all()
         self.feedback.set('Proposition IA consultée · Aucune source locale ouverte')
 
+    def _update_local_candidate(self):
+        """Locate source by declared identity; opening state remains a user action."""
+        self.local_candidate = None
+        self.local_lookup_issue = None
+        if self.locals_root is None:
+            self.locals_status.set('Dossier locals à choisir')
+        else:
+            self.locals_status.set('Collection locale configurée')
+        if not (self.browsed_slug and self.locals_root):
+            return
+        try:
+            self.local_candidate = find_local_kristal(self.locals_root, self.browsed_slug)
+        except (OSError, ValueError, ValidationError) as exc:
+            self.local_lookup_issue = str(exc)
+
     def _model(self):
         return resolve_display(self.proposals, self.browsed_slug, self.kristal_details)
 
     def _refresh_all(self):
+        self._update_local_candidate()
         model = self._model()
         title = model['title'] or 'Choisis un Kristal pour commencer'
         self.workspace_heading.set(title)
@@ -221,7 +251,8 @@ class StudioApp(tk.Tk):
         elif model['has_local_source']:
             sub = 'Source locale ouverte en lecture seule · Composition IA en cours de revue'
         else:
-            sub = 'Proposition consultée dans le registre · Aucune source locale ouverte'
+            sub = ('Dossier local identifié · Clique sur « Ouvrir les sources » pour le consulter'
+                   if self.local_candidate else 'Proposition consultée · Sources locales non ouvertes')
         self.workspace_sub.set(sub)
         for idx, painter in enumerate((self._draw_kristal, self._draw_composition,
                                        self._draw_preview, self._draw_publication)):
@@ -267,11 +298,19 @@ class StudioApp(tk.Tk):
             return
         self._card(body, m['title'], 'Identifiant : ' + str(m['slug']))
         if m['has_local_source']:
-            self._card(body, 'Source locale ouverte',
-                       'Les métadonnées du Kristal ont été consultées en lecture seule.', tone='good')
+            self._card(body, 'Sources locales ouvertes',
+                       'Ce Kristal a été ouvert en lecture seule. Sa composition reste une proposition.', tone='good')
+        elif self.local_candidate:
+            self._card(body, 'Dossier local trouvé',
+                       'L’identité déclarée correspond au Kristal sélectionné. Tu peux ouvrir ses sources en lecture seule.', tone='good')
+        elif self.local_lookup_issue:
+            self._card(body, 'Recherche du dossier à vérifier', self.local_lookup_issue, tone='warn')
+        elif not self.locals_root:
+            self._card(body, 'Indiquer la collection locale',
+                       'Choisis une fois le dossier locals afin que Spek puisse retrouver les Kristals par leur identité.', tone='warn')
         else:
-            self._card(body, 'Catalogue seulement',
-                       'La composition est consultable, mais les assertions locales n’ont pas été ouvertes.', tone='warn')
+            self._card(body, 'Dossier local introuvable',
+                       'Aucun dossier de cette collection ne déclare cet identifiant. Choisis un autre dossier locals ou ouvre manuellement le Kristal.', tone='warn')
         if m['has_structural_review']:
             self._card(body, 'Revue structurelle existante',
                        ('L’état local correspond à la source étudiée. L’exploration privée est disponible.'
@@ -284,8 +323,11 @@ class StudioApp(tk.Tk):
         actions = ttk.Frame(body)
         actions.pack(fill='x', pady=(6, 0))
         self._button(actions, 'Voir sa composition', lambda: self.tabs.select(1), primary=True)
-        self._button(actions, 'Ouvrir le dossier local…', self.open_kristal)
-        self._button(actions, 'Voir les étapes Wiki', lambda: self.tabs.select(2))
+        if self.local_candidate:
+            self._button(actions, 'Ouvrir les sources de ce Kristal', self.open_selected_sources)
+        else:
+            self._button(actions, 'Choisir un dossier local…', self.open_kristal)
+        self._button(actions, 'Aperçu Wiki', lambda: self.tabs.select(2))
 
     def _draw_composition(self, body, m):
         count = len(m['sections'])
@@ -308,38 +350,71 @@ class StudioApp(tk.Tk):
 
     def _draw_preview(self, body, m):
         self._heading(body, 'Aperçu du Wiki',
-                      'Deux niveaux différents : inspection des structures privées, ou rendu éditorial avec les textes de SemantiK.')
+                      'Un plan documentaire n’est pas un texte. Seul SemantiK Architect réalise les phrases qui remplissent les templates.')
+        if not m['slug']:
+            self._card(body, 'Choisis un Kristal', 'Sélectionne d’abord un Kristal dans la liste à gauche.')
+            return
+
+        # A structural review does not grant publication permission. Lookup is
+        # identity-only; the user must explicitly initiate source inspection.
         if m['source_verified']:
-            self._card(body, 'Structure consultable',
-                       'Une revue détaillée existe et la source locale correspond à l’état étudié.', tone='good')
+            structural_state = 'Les sources ouvertes correspondent à l’étude disponible.'
+            structural_enabled = True
+        elif m['has_structural_review'] and self.local_candidate:
+            structural_state = 'Dossier local identifié. L’outil vérifiera la correspondance des sources avant de créer l’aperçu.'
+            structural_enabled = True
+        elif m['has_structural_review'] and not self.locals_root:
+            structural_state = 'Indique le dossier locals pour que Spek retrouve la source de ce Kristal.'
+            structural_enabled = False
         elif m['has_structural_review']:
-            self._card(body, 'Inspection privée non disponible',
-                       'Ouvre le dossier local correspondant. La source doit être identique à celle de la revue.', tone='warn')
+            structural_state = ('L’état local ne correspond pas à l’étude disponible.' if m['has_local_source'] else
+                                'La source correspondante n’a pas été trouvée dans locals.')
+            structural_enabled = False
         else:
-            self._card(body, 'Inspection privée non disponible pour ce Kristal',
-                       'La revue structurelle complète reste à effectuer.', tone='warn')
+            structural_state = 'L’analyse structurelle détaillée de ce Kristal reste à réaliser.'
+            structural_enabled = False
+        self._card(body, '1 · Consulter le plan documentaire (sans phrases)', structural_state,
+                   tone='good' if m['source_verified'] else 'regular')
         row = ttk.Frame(body)
-        row.pack(fill='x', pady=(0, 13))
-        self.private_preview_btn = self._button(row, 'Explorer la structure privée',
-                        self.open_structural_preview, enabled=m['source_verified'], primary=m['source_verified'])
-        self._card(body, 'Rendu éditorial',
-                   ('Article et formulations chargés. Tu peux les vérifier localement avant de prévisualiser.'
-                    if self.article_path and self.realizations_path else
-                    'Pour voir une vraie page Wiki, fournis article.json et realizations.json. Spek ne rédige pas les textes.'),
-                   tone='good' if self.article_path and self.realizations_path else 'regular')
+        row.pack(fill='x', pady=(0, 17))
+        self.private_preview_btn = self._button(row, 'Voir le plan privé', self.explore_selected_structure,
+                            primary=True, enabled=structural_enabled)
+        if not structural_enabled:
+            self._button(row, 'Ouvrir un dossier…' if self.locals_root else 'Choisir locals…',
+                         self.open_kristal if self.locals_root else self.choose_locals_root)
+
+        ready = bool(self.article_path and self.realizations_path)
+        self._card(body, '2 · Réaliser les phrases avec SemantiK',
+                   ('Un article et ses formulations ont été chargés. Vérifie qu’ils concernent bien ce Kristal avant le rendu.' if ready else
+                    'Il faut un article.json, des requêtes sémantiques explicites et un RuntimeSet GF/PGF utilisable. Spek ne transforme jamais automatiquement les triplets bruts en prose.'),
+                   tone='good' if ready else 'regular')
+        row2 = ttk.Frame(body)
+        row2.pack(fill='x', pady=(0, 8))
+        self._button(row2, 'Réaliser avec SemantiK…', self.realize_with_semantik, primary=True)
+        self.render_btn = self._button(row2, 'Prévisualiser le Wiki', self.preview_wiki, enabled=ready)
+        self._button(row2, 'Vérifier', lambda: self.run_compiler(False), enabled=ready)
+        if not ready:
+            self._card(body, 'Texte non disponible',
+                       'Le plan peut être consulté, mais un vrai Wiki exige des phrases SemantiK. '
+                       'Aucun code brut ne sera utilisé comme texte de remplacement.', tone='warn')
+
+        # Extra preparation actions are secondary rather than mandatory steps.
         options = ttk.Frame(body)
-        options.pack(fill='x', pady=(3, 7))
-        self._button(options, 'Ouvrir article + formulations…', self.open_article)
-        self._button(options, 'Importer des résultats SemantiK…', self.import_semantik)
-        self._button(options, 'Préparer une correspondance…', self.prepare_semantik_mapping)
-        actions = ttk.Frame(body)
-        actions.pack(fill='x', pady=(2, 8))
-        available = bool(self.article_path and self.realizations_path)
-        self.check_btn = self._button(actions, 'Vérifier le document', lambda: self.run_compiler(False), enabled=available)
-        self.render_btn = self._button(actions, 'Prévisualiser le HTML', lambda: self.run_compiler(True),
-                                      primary=True, enabled=available)
-        self._card(body, 'Aperçu local uniquement',
-                   'La vérification et la compilation n’effectuent aucune publication et ne qualifient pas les formulations.')
+        options.pack(fill='x', pady=(3, 9))
+        self.semantik_options_visible = tk.BooleanVar(value=False)
+        details = ttk.Frame(body)
+        def toggle_options():
+            if self.semantik_options_visible.get():
+                details.pack(fill='x', pady=(0, 10), after=options)
+            else:
+                details.pack_forget()
+        ttk.Checkbutton(options, text='Options de préparation SemantiK',
+                        variable=self.semantik_options_visible, command=toggle_options).pack(anchor='w')
+        self._button(details, 'Charger article et formulations…', self.open_article)
+        self._button(details, 'Importer des résultats SemantiK…', self.import_semantik)
+        self._button(details, 'Préparer une correspondance…', self.prepare_semantik_mapping)
+        self._card(body, 'Aperçus privés',
+                   'Aucune de ces actions ne publie sur GitHub et ne remplace les autorisations C1 / C2 / C3.')
 
     def _draw_publication(self, body, m):
         self._heading(body, 'État de préparation du Wiki',
@@ -384,48 +459,175 @@ class StudioApp(tk.Tk):
         self.feedback.set('Action impossible · ' + str(exc)[:150])
         messagebox.showerror(title, str(exc), parent=self)
 
+    def choose_locals_root(self):
+        if self.busy:
+            return
+        selected = filedialog.askdirectory(parent=self, title='Choisir la collection de Kristals (dossier locals)',
+                  initialdir=str(self.locals_root or self.root_folder.parent))
+        if not selected:
+            return
+        try:
+            folder = validate_locals_root(Path(selected))
+            save_locals_root(folder)
+            self.locals_root = folder
+            # A newly chosen root cannot retroactively verify an old source.
+            self.kristal_details = None
+            self._refresh_all()
+            self.feedback.set('Collection locale enregistrée · La recherche utilise les identités déclarées')
+        except (OSError, ValueError, ValidationError) as exc:
+            self._error('Configuration du dossier locals', exc)
+
+    def _load_local_kristal(self, folder: Path, *, expected_slug: str | None = None):
+        details = inspect_kristal(folder, self.root_folder)
+        slug = details.get('identity')
+        if not slug:
+            raise ValidationError('Le Kristal ne déclare pas d’identifiant utilisable.')
+        if expected_slug is not None and slug != expected_slug:
+            raise ValidationError('Le dossier choisi ne correspond pas au Kristal sélectionné.')
+        # Atomic UI change: never replace state with a mismatched Kristal.
+        if slug != self.browsed_slug:
+            self.article_path = None
+            self.realizations_path = None
+            self.preview_ready = False
+        self.kristal_details = details
+        self.browsed_slug = slug
+        self.search_var.set('')
+        self._refresh_catalog()
+        self._refresh_all()
+        self.feedback.set('Sources ouvertes en lecture seule · Aucune publication')
+
+    def open_selected_sources(self):
+        """Explicitly open the matched local source, not just a catalog entry."""
+        if self.busy or not self.browsed_slug:
+            return False
+        self._update_local_candidate()
+        if self.local_candidate is None:
+            messagebox.showinfo('Sources introuvables',
+                 'Choisis le dossier locals ou utilise « Ouvrir un Kristal… » pour sélectionner manuellement la source.', parent=self)
+            return False
+        try:
+            self._load_local_kristal(self.local_candidate, expected_slug=self.browsed_slug)
+            return True
+        except (OSError, ValueError, ValidationError) as exc:
+            self._error('Vérification des sources', exc)
+            return False
+
     def open_kristal(self):
         if self.busy:
             return
         folder = filedialog.askdirectory(parent=self, title='Choisir le dossier du Kristal à consulter',
-                                         initialdir=str(self.root_folder.parent))
+                                         initialdir=str(self.locals_root or self.root_folder.parent))
         if not folder:
             return
         try:
-            details = inspect_kristal(Path(folder), self.root_folder)
-            slug = details.get('identity')
-            if not slug:
-                raise ValidationError('Le Kristal ne déclare pas de slug utilisable.')
-            self.kristal_details = details
-            self.browsed_slug = slug
-            self.search_var.set('')
-            self._refresh_catalog()
-            self._refresh_all()
+            self._load_local_kristal(Path(folder))
             self.tabs.select(0)
-            self.feedback.set('Kristal ouvert en lecture seule · Aucune publication')
         except (ValueError, OSError, ValidationError) as exc:
             self._error('Ouverture du Kristal', exc)
 
-    def open_article(self):
+    def explore_selected_structure(self):
+        """One action: open exact sources when found, verify state, then inspect."""
+        model = self._model()
+        if not model['source_verified']:
+            if not model['has_structural_review'] or not self.open_selected_sources():
+                return
+            model = self._model()
+        if model['source_verified']:
+            self.open_structural_preview()
+        else:
+            messagebox.showinfo('Sources à vérifier',
+                'Le dossier a été ouvert, mais son état ne correspond pas à celui de l’étude. Aucun aperçu n’a été généré.',parent=self)
+
+    def preview_wiki(self):
+        """One action: ask for explicit article and SemantiK results if absent."""
         if self.busy:
             return
+        if not (self.article_path and self.realizations_path):
+            if not self.open_article():
+                return
+        self.run_compiler(True)
+
+    def open_article(self):
+        if self.busy:
+            return False
         article = filedialog.askopenfilename(parent=self, title='Choisir article.json',
                                             filetypes=[('Fichiers JSON', '*.json')])
         if not article:
-            return
+            return False
         realizations = filedialog.askopenfilename(parent=self,
                          title='Choisir les formulations réalisations.json',
                          initialdir=str(Path(article).parent), filetypes=[('Fichiers JSON', '*.json')])
         if not realizations:
-            return
+            return False
         try:
             self.article_path, self.realizations_path = project_pair(Path(article), Path(realizations))
             self.preview_ready = False
             self._refresh_all()
             self.tabs.select(2)
             self.feedback.set('Projet chargé · Vérification locale recommandée')
+            return True
         except (ValueError, OSError, ValidationError) as exc:
             self._error('Fichiers non admissibles', exc)
+            return False
+
+    def realize_with_semantik(self):
+        """Exécute les requêtes explicites via le SDK officiel, puis importe les textes contrôlés."""
+        if self.busy:
+            return
+        article = filedialog.askopenfilename(
+            parent=self, title='Article Spek à remplir avec SemantiK (article.json)',
+            initialdir=str(self.article_path.parent if self.article_path else self.root_folder),
+            filetypes=[('Fichiers JSON', '*.json')])
+        if not article:
+            return
+        mapping = filedialog.askopenfilename(
+            parent=self, title='Correspondance avec les requêtes SemantiK (mapping.json)',
+            initialdir=str(Path(article).parent), filetypes=[('Fichiers JSON', '*.json')])
+        if not mapping:
+            return
+        architect = filedialog.askdirectory(
+            parent=self, title='Dossier du dépôt SemantiK Architect (contient src/)',
+            initialdir=str(self.root_folder.parent))
+        if not architect:
+            return
+        runtime = Path(architect) / 'runtime'
+        if not runtime.is_dir():
+            chosen = filedialog.askdirectory(
+                parent=self, title='Choisir le dossier RuntimeSets GF/PGF de SemantiK',
+                initialdir=str(architect))
+            if not chosen:
+                return
+            runtime = Path(chosen)
+        snapshot = None
+        try:
+            import json
+            source_obj = json.loads(Path(article).read_text(encoding='utf-8'))
+            if source_obj.get('source', {}).get('origin') == 'kristal_v9':
+                selected = filedialog.askopenfilename(
+                    parent=self, title='État canonique v9 associé à la sélection',
+                    initialdir=str(Path(article).parent), filetypes=[('Fichiers JSON', '*.json')])
+                if not selected:
+                    return
+                snapshot = Path(selected)
+        except (OSError, ValueError, AttributeError) as exc:
+            self._error('Article illisible', exc)
+            return
+        from .semantik_execution import realize_mapping
+        def action():
+            return realize_mapping(Path(article), Path(mapping), Path(architect), Path(runtime),
+                                  layouts=self.root_folder / 'layouts', state_snapshot=snapshot)
+        def done(result):
+            self.article_path = Path(article)
+            self.realizations_path = Path(result['realizations'])
+            self.lang_var.set(result['language'])
+            self.preview_ready = False
+            self.tabs.select(2)
+            self.feedback.set('Phrases SemantiK reçues et vérifiées · Aperçu privé seulement')
+            messagebox.showinfo('Réalisation SemantiK terminée',
+                'Les phrases proviennent de SemantiK Architect et ont été contrôlées. '
+                'Clique sur « Prévisualiser le Wiki ». Aucune publication n’est autorisée.',
+                parent=self)
+        self._run_background('Réalisation SemantiK', action, done)
 
     def prepare_semantik_mapping(self):
         if self.busy:
@@ -577,8 +779,8 @@ class StudioApp(tk.Tk):
         messagebox.showinfo('Spek · Mode d’emploi',
             '1. KRISTAL : cherche un nom à gauche ou ouvre sa source locale.\n\n'
             '2. COMPOSITION : consulte les sections prescrites par l’IA. Aucun template n’est deviné ici.\n\n'
-            '3. APERÇU WIKI : inspecte les cinq sources revues ou fournis un article et ses réalisations SemantiK pour un rendu HTML local.\n\n'
+            '3. APERÇU WIKI : le plan privé ne montre plus les triplets bruts. « Réaliser avec SemantiK » utilise les requêtes explicitement préparées et un RuntimeSet disponible, puis « Prévisualiser le Wiki » affiche les phrases validées.\n\n'
             '4. PUBLICATION : identifie les validations restantes C1/C2/C3. Ce programme ne publie rien.\n\n'
             'OUTILS AVANCÉS : bibliothèque, 27 layouts et édition JSON dans une fenêtre distincte.\n\n'
-            'Raccourcis : Ctrl+O ouvrir un Kristal · Ctrl+L charger un article · F5 actualiser · F1 aide.',
+            'Choisis le dossier locals une fois dans la colonne de gauche. Raccourcis : Ctrl+O ouvrir un Kristal · Ctrl+L charger un article · F5 actualiser · F1 aide.',
             parent=self)

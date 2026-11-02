@@ -1,3 +1,10 @@
+## 2026-11-02 — Aperçu documentaire et réalisation SemantiK explicite
+
+- L’aperçu du plan d’un Kristal n’expose plus les triplets canoniques en tant que prose. Il indique « Texte en attente de réalisation SemantiK ».
+- Ajout de l’exécution locale du CLI officiel SemantiK Architect sur les requêtes déjà associées explicitement à un article Spek, suivie de la validation stricte des résultats.
+- Un RuntimeSet absent ou invalide provoque un refus, sans génération artificielle de phrases.
+- Conservation des 127 propositions IA, des 27 layouts, des contrôles de source, du thème #1E6864 et des règles C1/C2/C3.
+
 ## 2026-11-01 — Spek Atelier UX v2 (local, no release/publish)
 
 - New unified primary workflow `open → check → preview`, implemented in existing `.pyw` launcher, accessible with `START_SPEK.bat` or `OUVRIR_SPEK.cmd`; former demo preserved as `DEMO_SPEK_LOCAL.bat`.
