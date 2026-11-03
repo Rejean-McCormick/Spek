@@ -1,0 +1,46 @@
+{
+  "format": "spek.template-graph/1.0",
+  "template_id": "wiki.domain-primer-source-bound",
+  "version": "1.0.0",
+  "category": "wiki",
+  "intent": "Article de référence : une ouverture puis des sections thématiques imbriquées et une limite",
+  "slots": {
+    "introduction": {
+      "node_kind": "child",
+      "min": 1,
+      "max": 1,
+      "allowed_templates": [
+        "rhetorical.definition@1.0.0"
+      ]
+    },
+    "sections": {
+      "node_kind": "child",
+      "min": 3,
+      "max": 9,
+      "allowed_templates": [
+        "wiki.domain-section@1.0.0"
+      ]
+    },
+    "limits": {
+      "node_kind": "child",
+      "min": 0,
+      "max": 0,
+      "allowed_templates": [
+        "rhetorical.qualification@1.0.0"
+      ]
+    }
+  },
+  "ordered_slots": [
+    "introduction",
+    "sections",
+    "limits"
+  ],
+  "presentation_policy": {
+    "layout_variant": "stack",
+    "show_template_labels": false
+  },
+  "no_fact_selection": true,
+  "no_text_generation": true,
+  "project_status": "pilot_private_not_approved",
+  "documentation_note": "Strict source-bound edition: omits unanchored editorial qualification; no facts inferred."
+}

@@ -1,3 +1,21 @@
+## 2026-11-03 — Contrats discursifs pour les 62 templates
+
+- Modèles de mouvements rhétoriques, groupes de paragraphes et DAG des relations déclarées, non vérifiées sémantiquement.
+- Slots de transition SemantiK explicites dans quatre modèles, sans connecteurs automatiques ni reformulations.
+- `discourse-audit`, `compose-source-check`, dialogue étendu, audit graphique et refus stricts.
+- Test de présence de références sur graphe réel Agriculture v11 ; aucune réalisation GF/PGF réelle ni autorisation de publication.
+- Documentation `/docs/COMPOSITION_RECURSIVE_VNEXT/14_…` et `15_…`.
+
+## 2026-11-02 — vNext : composition récursive et templates rhétoriques (aperçu privé)
+
+- Ajout du moteur `spek.composition` : définitions/instances versionnées, DAG instancié, répétitions explicites et validation stricte.
+- Nouvelle catégorie `template_library/rhetorical/` : 10 templates au même niveau que la bibliothèque Wiki ; exemple intercatégorie `wiki.article`.
+- CLI : `compose-check`, `compose-dialogue`, `compose-import-semantik`, `compose-preview` et intégration graphique facultative.
+- HTML/Markdown privés plus fluides, sans titres techniques répétés et sans données d'audit ; contrôle stricte des réalisations fournies.
+- 27 layouts historiques, registre des 127 propositions et mécanisme de publication séparé inchangés.
+- **Non implémentés :** exécution GF/PGF vNext directe, qualification C1/C2/C3, publication de la collection, formats PDF/TeX récursifs.
+- Référence : `docs/COMPOSITION_RECURSIVE_VNEXT/11_ETAT_DU_CODE_LIVRE.md`.
+
 ## 2026-11-02 — Aperçu documentaire et réalisation SemantiK explicite
 
 - L’aperçu du plan d’un Kristal n’expose plus les triplets canoniques en tant que prose. Il indique « Texte en attente de réalisation SemantiK ».

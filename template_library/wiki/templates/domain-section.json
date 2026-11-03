@@ -1,0 +1,47 @@
+{
+  "format": "spek.template-graph/1.0",
+  "template_id": "wiki.domain-section",
+  "version": "1.0.0",
+  "category": "wiki",
+  "intent": "Section thématique : titre unique, définition focale, définitions connexes sans sous-titres",
+  "slots": {
+    "heading": {
+      "node_kind": "text",
+      "min": 1,
+      "max": 1,
+      "allowed_kinds": [
+        "concept"
+      ],
+      "visual_role": "section_heading"
+    },
+    "lead": {
+      "node_kind": "text",
+      "min": 1,
+      "max": 1,
+      "allowed_kinds": [
+        "definition"
+      ],
+      "visual_role": "paragraph"
+    },
+    "details": {
+      "node_kind": "child",
+      "min": 1,
+      "max": 8,
+      "allowed_templates": [
+        "rhetorical.definition@1.0.0"
+      ]
+    }
+  },
+  "ordered_slots": [
+    "heading",
+    "lead",
+    "details"
+  ],
+  "presentation_policy": {
+    "layout_variant": "stack",
+    "show_template_labels": false
+  },
+  "no_fact_selection": true,
+  "no_text_generation": true,
+  "project_status": "pilot_private_not_approved"
+}

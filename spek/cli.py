@@ -221,9 +221,140 @@ def main(argv=None):
     edu.add_argument('--adapter',required=True,choices=('ekole','kompose'))
     edu.add_argument('--input',required=True)
     edu.add_argument('--out-dir',required=True)
+    comp=sub.add_parser('compose-check', help='Validate an explicit recursive composition (private, no prose)')
+    comp.add_argument('--instance', required=True)
+    comp.add_argument('--library-root', default=str(ROOT))
+    dlg=sub.add_parser('compose-dialogue', help='Prepare per-leaf SemantiK shapes without choosing facts')
+    dlg.add_argument('--instance', required=True)
+    dlg.add_argument('--library-root', default=str(ROOT))
+    dlg.add_argument('--language', default='fr', choices=LANGS)
+    dlg.add_argument('--requests-dir', help='Optional directory of explicit CommunicationRequest JSON files')
+    dlg.add_argument('--out', required=True)
+    prev=sub.add_parser('compose-preview', help='Private recursive HTML and Markdown preview, no publication')
+    prev.add_argument('--instance', required=True)
+    prev.add_argument('--realizations', required=True)
+    prev.add_argument('--library-root', default=str(ROOT))
+    prev.add_argument('--language', default='fr', choices=LANGS)
+    prev.add_argument('--title', default='Composition — aperçu privé')
+    prev.add_argument('--out', required=True, help='New private directory outside Spek')
+    imp=sub.add_parser('compose-import-semantik', help='Validate explicitly supplied SemantiK request/result pairs for recursive slots')
+    imp.add_argument('--instance',required=True)
+    imp.add_argument('--library-root',default=str(ROOT))
+    imp.add_argument('--requests-dir',required=True)
+    imp.add_argument('--results-dir',required=True)
+    imp.add_argument('--language',default='fr',choices=LANGS)
+    imp.add_argument('--out',required=True, help='New private realization bundle JSON')
+    da=sub.add_parser('discourse-audit', help='Audit template discourse moves and links; private, no text generation')
+    da.add_argument('--instance',required=True)
+    da.add_argument('--library-root',default=str(ROOT))
+    da.add_argument('--format',choices=('text','json'),default='text')
+    src=sub.add_parser('compose-source-check',help='Check explicit assertion IDs against a supplied v11 graph (existence only)')
+    src.add_argument('--instance',required=True)
+    src.add_argument('--library-root',default=str(ROOT))
+    src.add_argument('--state-source',required=True)
+    src.add_argument('--identity-map',help='Optional explicit v6→v11 identity migration map')
+    lock=sub.add_parser('compose-lock', help='Lock explicit sources, requests and recursive templates into a PRIVATE handoff')
+    lock.add_argument('--instance',required=True)
+    lock.add_argument('--library-root',default=str(ROOT))
+    lock.add_argument('--requests-dir',required=True)
+    lock.add_argument('--language',default='fr',choices=LANGS)
+    lock.add_argument('--source-graph',help='Optional explicit Kristal v11 graph for assertion-existence check')
+    lock.add_argument('--identity-map',help='Optional explicit v6→v11 identity migration map')
+    lock.add_argument('--out',required=True,help='New private JSON file, outside tracked/public repository')
+    vlock=sub.add_parser('compose-verify-lock',help='Verify complete private handoff against current files')
+    vlock.add_argument('--lock',required=True)
+    vlock.add_argument('--instance',required=True)
+    vlock.add_argument('--library-root',default=str(ROOT))
+    vlock.add_argument('--requests-dir',required=True)
+    vlock.add_argument('--source-graph')
+    vlock.add_argument('--identity-map')
+    rh=sub.add_parser('rhetoric-list', help='List research-based rhetorical template definitions, without semantic inference')
+    rh.add_argument('--family', choices=('coherence','discourse','argument','genre','epistemique','original_vnext'))
+    rh.add_argument('--format', choices=('text','json'), default='text')
     args=parser.parse_args(argv)
     try:
-        if args.command=='check':
+        if args.command=='compose-lock':
+            from .composition.editorial_lock import prepare
+            dest=Path(args.out)
+            if dest.exists() or dest.is_symlink() or dest.resolve().is_relative_to(ROOT.resolve()):
+                raise ValidationError('Le verrou privé doit être un nouveau fichier hors du dépôt Spek')
+            lockdata=prepare(Path(args.library_root),Path(args.instance),Path(args.requests_dir),args.language,
+                 source_graph=Path(args.source_graph) if args.source_graph else None,
+                 identity_map=Path(args.identity_map) if args.identity_map else None)
+            dest.parent.mkdir(parents=True,exist_ok=True)
+            write(dest,json.dumps(lockdata,ensure_ascii=False,sort_keys=True,indent=2)+'\n')
+            print(f'VERROU PRIVÉ : {len(lockdata["fields"])} champs, {len(lockdata["template_locks"])} templates ; NON PUBLIABLE')
+        elif args.command=='compose-verify-lock':
+            from .composition.editorial_lock import verify
+            report=verify(read_json(Path(args.lock)),Path(args.library_root),Path(args.instance),Path(args.requests_dir),
+                 source_graph=Path(args.source_graph) if args.source_graph else None,
+                 identity_map=Path(args.identity_map) if args.identity_map else None)
+            print(f'VERROU VÉRIFIÉ (PRIVÉ) : {report["fields"]} champs · {report["locked_templates"]} templates')
+        elif args.command=='discourse-audit':
+            from .composition.commands import load
+            from .composition.discourse import discourse_audit
+            report=discourse_audit(load(Path(args.library_root),Path(args.instance)))
+            if args.format=='json':
+                print(json.dumps(report,ensure_ascii=False,indent=2))
+            else:
+                print(f"PLAN DISCURSIF PRIVÉ : {report['templates_with_discourse_model']} templates, "
+                      f"{report['declared_relations_unverified']} liens à vérifier, 0 connecteur créé, non publiable")
+        elif args.command=='compose-source-check':
+            from .composition.commands import load
+            from .composition.source_binding import verify_v11_assertion_refs
+            report=verify_v11_assertion_refs(load(Path(args.library_root),Path(args.instance)),Path(args.state_source),
+                 Path(args.identity_map) if args.identity_map else None)
+            print(f"RÉFÉRENCES PRÉSENTES (NON QUALIFIÉES) : {report['anchored_fields']} champs, "
+                  f"{report['anchored_references']} références ; relation non validée ; non publiable")
+        elif args.command=='rhetoric-list':
+            # Fixed local inventory, no network and no fact inspection.
+            from .composition.engine import Library
+            lib=Library(ROOT/'template_library')
+            file=ROOT/'template_library/rhetorical/research-inventory.json'
+            if file.is_symlink() or not file.is_file() or file.stat().st_size > 2_000_000:
+                raise ValidationError('Registre rhétorique absent ou non sûr')
+            inventory=json.loads(file.read_text(encoding='utf-8'))
+            if inventory.get('format') != 'spek.rhetorical-research-inventory/1.0':
+                raise ValidationError('Format de registre rhétorique invalide')
+            patterns=inventory.get('patterns')
+            if not isinstance(patterns,list) or len(patterns) != len(set(str(p.get('template_ref')) for p in patterns if isinstance(p,dict))):
+                raise ValidationError('Inventaire rhétorique invalide ou dupliqué')
+            if any(not isinstance(p,dict) or p.get('template_ref') not in lib.definitions for p in patterns):
+                raise ValidationError('Le catalogue et la bibliothèque ne concordent pas')
+            selected=[p for p in patterns if args.family is None or p.get('family')==args.family]
+            if args.format=='json':
+                print(json.dumps({'format':inventory['format'],'patterns':selected},ensure_ascii=False,indent=2))
+            else:
+                for pat in selected:
+                    print(f"{pat['id']} [{pat['family']}] — {pat['label_fr']}")
+                print(f"{len(selected)} templates rhétoriques déclarés ; correspondances sémantiques NON vérifiées")
+        elif args.command=='compose-import-semantik':
+            from .composition.commands import load
+            from .composition.semantik_adapter import import_results
+            resolved=load(Path(args.library_root),Path(args.instance))
+            bundle=import_results(resolved,Path(args.requests_dir),Path(args.results_dir),args.language)
+            if Path(args.out).exists() or Path(args.out).is_symlink():
+                raise ValidationError('Bundle déjà présent, remplacement interdit')
+            write(Path(args.out),json.dumps(bundle,ensure_ascii=False,indent=2)+'\n')
+            print('IMPORT SEMANTIK VÉRIFIÉ · APERÇU PRIVÉ : '+str(len(bundle['entries']))+' champs')
+        elif args.command=='compose-check':
+            from .composition.commands import load
+            resolved=load(Path(args.library_root), Path(args.instance))
+            print(f'VALIDÉ (PRIVÉ) : {len(resolved.leaves)} champs textuels · 0 fait choisi · non publiable')
+        elif args.command=='compose-dialogue':
+            from .composition.commands import prepare_dialogue
+            plan=prepare_dialogue(Path(args.library_root),Path(args.instance),args.language,
+                 Path(args.requests_dir) if args.requests_dir else None)
+            if Path(args.out).exists() or Path(args.out).is_symlink():
+                raise ValidationError('Fichier de dialogue existant : remplacement refusé')
+            write(Path(args.out),json.dumps(plan,ensure_ascii=False,indent=2)+'\n')
+            print(f'PLAN SEMANTIK PRIVÉ : {len(plan["fields"])} champs · aucune phrase créée')
+        elif args.command=='compose-preview':
+            from .composition.commands import preview
+            result=preview(Path(args.library_root),Path(args.instance),Path(args.realizations),
+                           args.language,Path(args.out),title=args.title)
+            print('APERÇU PRIVÉ — NON PUBLIABLE : '+result['page'])
+        elif args.command=='check':
             m=load_model(args);print(f'PASS: {len(m.sections)} sections · {len(m.units)} units · {len(m.evidence)} evidence · {",".join(m.languages)} · demo={m.demo}')
         elif args.command=='build': build(args)
         elif args.command=='build-wiki':

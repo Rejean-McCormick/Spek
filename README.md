@@ -280,3 +280,19 @@ les empreintes de fichiers sources ; les contrôles d'intégrité restent effect
 avant la création des aperçus. Les relations structurelles demeurent privées et
 ne sont pas destinées à la publication. Voir
 `docs/IDENTITE_VISUELLE_CONFIDENTIALITE_2026-11-02_FR.md`.
+
+## Composition récursive vNext (aperçus privés)
+
+Spek prend en charge la catégorie `rhetorical`, les templates imbriqués versionnés et les répétitions avec bindings explicites. Le rendu HTML/Markdown privé utilise des phrases fournies par SemantiK ; il ne sélectionne pas de faits et ne publie rien. Voir [documentation vNext](docs/COMPOSITION_RECURSIVE_VNEXT/11_ETAT_DU_CODE_LIVRE.md) et `python -m spek compose-check --help`. Le compilateur classique reste supporté.
+
+## Composition discursive vNext — mise à jour du 3 novembre 2026
+
+Spek dispose de **62 templates rhétoriques** décrivant chacun leurs mouvements de discours, leurs relations déclarées, leurs groupes de paragraphes et leurs limites. Les transitions linguistiques ne sont pas produites par Spek : quatre modèles proposent un champ de liaison facultatif dont la phrase doit provenir d'une réalisation explicitement fournie à SemantiK.
+
+Depuis la racine du dépôt :
+
+```powershell
+py -3 -m spek discourse-audit --instance docs\COMPOSITION_RECURSIVE_VNEXT\exemples\toulmin-avec-liaison-FICTIVE.instance.json
+```
+
+L'atelier graphique propose aussi un audit privé des mouvements rhétoriques dans les options SemantiK. Tous les modèles restent non publiables sans qualification des faits, relations et réalisations et autorisations externes. Consulter [la grammaire du discours](docs/COMPOSITION_RECURSIVE_VNEXT/14_GRAMMAIRE_DU_DISCOURS.md) et [le test d'ancrage réel](docs/COMPOSITION_RECURSIVE_VNEXT/15_SOURCES_REELLES_ET_LIMITES_SEMANTIK.md). Les phrases des exemples sont **fictives et manuelles**.

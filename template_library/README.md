@@ -4,6 +4,7 @@ Every publication **category** lives under `template_library/<category>/`.
 This is one root-level namespace, not a set of peer `*-templates` directories.
 
 - `wiki/`: implemented Arketype-to-Spek Wiki profiles; `archetype-profiles.json` is normative for this integration.
+- `rhetorical/`: implemented local versioned recursive templates for organization of SemantiK phrases (no prose generation).
 - `educational/`, `scientific/`, `report/`, `book/`: reserved families, not production engines.
 
 Each category contains a `category.json` descriptor (`spek.template-category/1.0`).

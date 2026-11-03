@@ -19,6 +19,7 @@ import tempfile
 from typing import Any
 
 from .core import ValidationError
+from .slot_dialogue import from_files, compose_request, verify_result_shape
 from .semantik_transfer import (
     TRANSFER_FORMAT, _ensure, _file, _read, _required_keys, transfer,
 )
@@ -72,6 +73,10 @@ def realize_mapping(
     _ensure(isinstance(bindings, dict) and set(bindings) == _required_keys(article),
             'une requête explicite est requise pour chaque champ du template')
     _ensure(0 < len(bindings) <= 400, 'nombre de champs trop élevé')
+    # Spek détermine la FORME à demander pour chaque champ de layout.
+    # Les faits et obligations restent ceux de l'éditeur, inchangés.
+    slot_plan = from_files(article_path, layouts or Path(__file__).resolve().parent.parent / 'layouts', lang)
+    _ensure(set(slot_plan['fields']) == set(bindings), 'plan de formulation incomplet')
 
     # Valider tous les fichiers AVANT la première réalisation. Le modèle ne
     # fabrique jamais automatiquement les obligations ou les assertions.
@@ -96,7 +101,9 @@ def realize_mapping(
         _ensure(isinstance(obj.get('context'), dict)
                 and obj['context'].get('target_language') == lang,
                 f'{key} : langue de requête différente')
-        requests[key] = (request, result_rel, obj)
+        # Bloquer les conflits de mode communicatif avant toute exécution.
+        prepared_request = compose_request(obj, slot_plan['fields'][key], language=lang)
+        requests[key] = (request, result_rel, prepared_request)
 
     private_root = Path(tempfile.mkdtemp(prefix='spek-semantik-realisation-privee-'))
     bundle = private_root / 'entrees'
@@ -107,14 +114,16 @@ def realize_mapping(
     safe_mapping = {'format': TRANSFER_FORMAT, 'language': lang, 'bindings': bindings}
     (bundle / 'mapping.json').write_text(json.dumps(safe_mapping, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
-    for key, (source, result_rel, _) in sorted(requests.items()):
+    for key, (source, result_rel, prepared_request) in sorted(requests.items()):
         request_rel = Path(bindings[key]['request'])
         target_request = bundle / request_rel
         target_result = bundle / result_rel
         for target in (target_request, target_result):
             _ensure(target.resolve().is_relative_to(bundle.resolve()), 'sortie hors espace privé')
             target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source, target_request)
+        # Espace temporaire privé : garder intacte la requête d'origine.
+        # Le texte sera réalisé à partir de la requête CONTRAINTE par Spek.
+        target_request.write_text(json.dumps(prepared_request, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         cmd = [_python_executable(), '-m', 'semantik_architect.adapters.inbound.cli.main',
                '--runtime-root', str(runtime_root), 'render', str(target_request)]
         try:
@@ -135,6 +144,7 @@ def realize_mapping(
             raise ValidationError(f'SemantiK a retourné un résultat non JSON pour « {key} »') from exc
         _ensure(isinstance(result, dict) and result.get('schema_version') == '1.0',
                 f'{key} : résultat SemantiK invalide')
+        verify_result_shape(result, slot_plan['fields'][key], request=prepared_request)
         # The existing verified transfer checks obligation coverage, language,
         # RuntimeSet, source references and deterministic result identity.
         target_result.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

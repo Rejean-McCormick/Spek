@@ -15,7 +15,7 @@ class LibraryCategoryTests(unittest.TestCase):
         categories={c['id']:c['status'] for c in list_template_categories()}
         self.assertEqual(categories,{
             'wiki':'implemented','educational':'reserved','scientific':'reserved',
-            'report':'reserved','book':'reserved'})
+            'report':'reserved','book':'reserved','rhetorical':'implemented'})
         profiles=load_profiles(ROOT/'template_library/wiki/archetype-profiles.json')
         self.assertEqual(len(profiles),19)
 

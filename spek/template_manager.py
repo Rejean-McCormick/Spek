@@ -116,6 +116,10 @@ def template_inventory(root: Path) -> dict[str, Any]:
                 if f.is_symlink():
                     raise ValidationError('Template symbolique interdit')
                 obj = read_object(f)
+                if obj.get('format') == 'spek.template-graph/1.0':
+                    # vNext definitions are read-only here: edited only by their
+                    # own strict versioned contract, not the draft JSON editor.
+                    continue
                 validate_family_template(obj, c['id'], f.stem)
                 items.append(f.stem)
         templates[c['id']] = items

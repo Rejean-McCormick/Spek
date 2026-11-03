@@ -432,6 +432,9 @@ class StudioApp(tk.Tk):
         self._button(row2, 'Réaliser avec SemantiK…', self.realize_with_semantik, primary=True)
         self.render_btn = self._button(row2, 'Prévisualiser le Wiki', self.preview_wiki, enabled=ready)
         self._button(row2, 'Vérifier', lambda: self.run_compiler(False), enabled=ready)
+        phrase_row = ttk.Frame(body)
+        phrase_row.pack(fill='x', pady=(0, 10))
+        self._button(phrase_row, 'Voir les formes demandées par Spek…', self.show_phrase_dialogue)
         if not ready:
             self._card(body, 'Texte non disponible',
                        'Le plan peut être consulté, mais un vrai Wiki exige des phrases SemantiK. '
@@ -452,8 +455,95 @@ class StudioApp(tk.Tk):
         self._button(details, 'Charger article et formulations…', self.open_article)
         self._button(details, 'Importer des résultats SemantiK…', self.import_semantik)
         self._button(details, 'Préparer une correspondance…', self.prepare_semantik_mapping)
+        self._button(details, 'Prévisualiser une composition récursive…', self.preview_recursive_composition)
+        self._button(details, 'Auditer les mouvements rhétoriques…', self.audit_discourse_composition)
+        self._button(details, 'Vérifier les sources et verrouiller le plan…', self.lock_editorial_composition)
         self._card(body, 'Aperçus privés',
                    'Aucune de ces actions ne publie sur GitHub et ne remplace les autorisations C1 / C2 / C3.')
+
+    def lock_editorial_composition(self):
+        """Explicit, private traceability check. Never approves facts or publishes."""
+        if self.busy:
+            return
+        instance=filedialog.askopenfilename(parent=self,
+            title='Composition récursive à verrouiller (privé)',
+            filetypes=[('Compositions JSON','*.json')])
+        if not instance:
+            return
+        requests=filedialog.askdirectory(parent=self,
+            title='Dossier des requêtes SemantiK explicites')
+        if not requests:
+            return
+        graph=filedialog.askopenfilename(parent=self,
+            title='Graphe canonique v11 (Annuler pour contrôle sans graphe)',
+            filetypes=[('Graphe JSON','*.json')])
+        identity=None
+        if graph:
+            identity=filedialog.askopenfilename(parent=self,
+                title='Table de migration des identifiants v6 vers v11 (Annuler si identifiants déjà v11)',
+                filetypes=[('Table JSON','*.json')])
+        try:
+            from .composition.editorial_lock import prepare
+            package=prepare(self.root_folder,Path(instance),Path(requests),self.lang_var.get(),
+                source_graph=Path(graph) if graph else None,
+                identity_map=Path(identity) if identity else None)
+            output=Path(tempfile.mkdtemp(prefix='spek-editorial-verification-privee-'))/'private-lock.json'
+            output.write_text(json.dumps(package,ensure_ascii=False,sort_keys=True,indent=2)+'\n',encoding='utf-8')
+            msg=(f"{len(package['fields'])} champs liés aux obligations SemantiK\n"
+                 f"{package['selected_assertion_count']} assertions sélectionnées\n"
+                 f"{len(package['template_locks'])} templates verrouillés\n"
+                 f"Graphe v11 vérifié : {'oui' if package['source']['assertion_existence_checked'] else 'non'}\n\n"
+                 f"Verrou privé sauvegardé hors du dépôt :\n{output}\n\n"
+                 'Aucune relation scientifique certifiée ; aucune autorisation de publication.')
+            messagebox.showinfo('Spek · Traçabilité privée',msg,parent=self)
+            self.feedback.set('Traçabilité privée vérifiée, sans qualification ni publication')
+        except (OSError, ValueError, ValidationError,KeyError) as exc:
+            self._error('Traçabilité privée',exc)
+
+    def audit_discourse_composition(self):
+        """Show declared discourse structure, not assertions or authorization."""
+        if self.busy:
+            return
+        instance = filedialog.askopenfilename(parent=self,
+            title='Choisir une composition récursive explicite pour audit',
+            filetypes=[('Compositions JSON', '*.json')])
+        if not instance:
+            return
+        try:
+            from .composition.commands import load
+            from .composition.discourse import discourse_audit
+            report = discourse_audit(load(self.root_folder, Path(instance)))
+            msg = (f"{report['templates_with_discourse_model']} modèles discursifs inclus\n"
+                   f"{report['declared_relations_unverified']} relations déclarées à vérifier\n"
+                   '0 transition créée automatiquement\n\n'
+                   'Les mouvements définissent la lecture et les paragraphes.\n'
+                   'Les phrases de liaison exigent une réalisation SemantiK explicite.\n'
+                   'Cet audit ne certifie ni les faits, ni les relations, ni la publication.')
+            messagebox.showinfo('Spek · Audit rhétorique privé', msg, parent=self)
+        except (OSError, ValueError, ValidationError) as exc:
+            self._error('Audit rhétorique', exc)
+
+    def preview_recursive_composition(self):
+        """Explicit vNext preview, no templates inferred from Kristal contents."""
+        if self.busy:
+            return
+        instance = filedialog.askopenfilename(parent=self, title='Composition récursive explicitement préparée',
+                   filetypes=[('Compositions JSON','*.json')])
+        if not instance:
+            return
+        phrases = filedialog.askopenfilename(parent=self, title='Réalisations SemantiK déjà disponibles',
+                  filetypes=[('Réalisations JSON','*.json')])
+        if not phrases:
+            return
+        try:
+            from .composition.commands import preview
+            output=Path(tempfile.mkdtemp(prefix='spek-vnext-cible-'))
+            output.rmdir()  # preview requires a new destination
+            result=preview(self.root_folder,Path(instance),Path(phrases),self.lang_var.get(),output)
+            webbrowser.open(Path(result['page']).as_uri())
+            self.feedback.set('Composition récursive ouverte · aperçu privé, non publiable')
+        except (OSError, ValueError, ValidationError) as exc:
+            self._error('Composition récursive', exc)
 
     def _draw_publication(self, body, m):
         self._heading(body, 'État de préparation du Wiki',
@@ -608,6 +698,60 @@ class StudioApp(tk.Tk):
         except (ValueError, OSError, ValidationError) as exc:
             self._error('Fichiers non admissibles', exc)
             return False
+
+    def show_phrase_dialogue(self):
+        """Visualiser la décision de forme prise par Spek pour chaque slot.
+
+        Aucun Kristal n'est parcouru, aucun fait ni texte n'est généré.
+        """
+        article = self.article_path
+        if article is None:
+            selected = filedialog.askopenfilename(
+                parent=self, title='Choisir un article Spek déjà composé (article.json)',
+                initialdir=str(self.root_folder), filetypes=[('Fichiers JSON', '*.json')])
+            if not selected:
+                return
+            article = Path(selected)
+        try:
+            from .slot_dialogue import from_files
+            plan = from_files(article, self.root_folder / 'layouts', self.lang_var.get())
+        except (OSError, ValueError, ValidationError) as exc:
+            self._error('Formes de phrases', exc)
+            return
+        dialogue = tk.Toplevel(self)
+        dialogue.title('Spek · Formes demandées à SemantiK')
+        dialogue.geometry('850x525')
+        dialogue.minsize(600, 350)
+        ttk.Label(dialogue, text='Spek choisit la forme, SemantiK réalise la phrase',
+                  font=('Segoe UI', 13, 'bold'), foreground=BRAND).pack(anchor='w', padx=15, pady=(15, 4))
+        ttk.Label(dialogue, text='Ces prescriptions proviennent des slots du layout. Les faits, obligations et preuves restent définis ailleurs.',
+                  wraplength=785, justify='left').pack(anchor='w', padx=15, pady=(0, 12))
+        box = ttk.Frame(dialogue, padding=(12, 0, 12, 6))
+        box.pack(fill='both', expand=True)
+        tree = ttk.Treeview(box, columns=('champ','forme','blocs'), show='headings')
+        tree.heading('champ', text='Champ du template')
+        tree.heading('forme', text='Forme souhaitée')
+        tree.heading('blocs', text='Type transmis à SemantiK')
+        tree.column('champ', width=330)
+        tree.column('forme', width=205)
+        tree.column('blocs', width=210)
+        bar = ttk.Scrollbar(box, command=tree.yview)
+        tree.configure(yscrollcommand=bar.set)
+        tree.pack(side='left', fill='both', expand=True)
+        bar.pack(side='right', fill='y')
+        for field in plan['fields'].values():
+            loc = field['locations'][0]
+            if loc['scope'] == 'slot':
+                label = str(loc['section']) + ' / ' + str(loc['slot'])
+            elif loc['scope'] == 'section':
+                label = str(loc['section']) + ' / titre'
+            else:
+                label = 'Article / ' + str(loc['field']).replace('_key', '')
+            tree.insert('', 'end', values=(label,
+                field['intent'].replace('_', ' '), ', '.join(field['block_kinds'])))
+        ttk.Label(dialogue, text=f"{len(plan['fields'])} champs · Aperçu privé · Aucune réalisation ni publication",
+                  foreground=MUTED).pack(anchor='w', padx=15, pady=(0, 12))
+        ttk.Button(dialogue, text='Fermer', command=dialogue.destroy).pack(anchor='e', padx=15, pady=(0, 12))
 
     def realize_with_semantik(self):
         """Exécute les requêtes explicites via le SDK officiel, puis importe les textes contrôlés."""
@@ -818,8 +962,9 @@ class StudioApp(tk.Tk):
         messagebox.showinfo('Spek · Mode d’emploi',
             '1. KRISTAL : cherche un nom à gauche ou ouvre sa source locale.\n\n'
             '2. COMPOSITION : consulte les sections prescrites par l’IA. Aucun template n’est deviné ici.\n\n'
-            '3. APERÇU WIKI : le plan privé ne montre plus les triplets bruts. « Réaliser avec SemantiK » utilise les requêtes explicitement préparées et un RuntimeSet disponible, puis « Prévisualiser le Wiki » affiche les phrases validées.\n\n'
+            '3. APERÇU WIKI : « Formes de phrases » montre comment Spek prescrit les formes par champ. « Réaliser avec SemantiK » transmet ces contraintes avec les requêtes préparées et un RuntimeSet disponible, puis « Prévisualiser le Wiki » affiche les phrases contrôlées.\n\n'
             '4. PUBLICATION : identifie les validations restantes C1/C2/C3. Ce programme ne publie rien.\n\n'
+            'COMPOSITION RÉCURSIVE vNext : dans Options de préparation SemantiK, tu peux auditer les mouvements rhétoriques, puis prévisualiser une composition avec des réalisations explicites. Aucune transition ou assertion inventée.\n\n'
             'OUTILS AVANCÉS : bibliothèque, 27 layouts et édition JSON dans une fenêtre distincte.\n\n'
             'Choisis le dossier locals une fois dans la colonne de gauche. Raccourcis : Ctrl+O ouvrir un Kristal · Ctrl+L charger un article · F5 actualiser · F1 aide.',
             parent=self)

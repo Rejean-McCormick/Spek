@@ -1,0 +1,4 @@
+# Dossiers pilotes prives : NE JAMAIS les publier avec le depot Spek.
+# Peut contenir des assertions, requetes, textes sources et journaux d audit.
+*
+!.gitignore
