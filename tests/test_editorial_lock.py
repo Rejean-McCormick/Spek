@@ -75,3 +75,23 @@ def test_unanchored_or_mismatched_obligation_is_refused(tmp_path):
     request.write_text(json.dumps(r))
     with pytest.raises(ValidationError):
         prepare(REPO,instance,reqs,'fr')
+
+
+def test_reused_request_file_refused_even_with_distinct_realization_keys(tmp_path):
+    instance,reqs,graph,migration=fixture(tmp_path)
+    data=json.loads(instance.read_text(encoding='utf-8'))
+    data['bindings']['definition']['communication_request_ref']='requests/term.json'
+    instance.write_text(json.dumps(data),encoding='utf-8')
+    with pytest.raises(ValidationError,match='même requête'):
+        prepare(REPO,instance,reqs,'fr',source_graph=graph,identity_map=migration)
+
+
+def test_private_preview_refuses_other_git_checkout(tmp_path):
+    from spek.composition.commands import preview
+    instance,reqs,_,_=fixture(tmp_path)
+    git_root=tmp_path/'other-public-repository'
+    (git_root/'.git').mkdir(parents=True)
+    out=git_root/'private-preview'
+    with pytest.raises(ValidationError,match='dépôt Git'):
+        preview(REPO,instance,tmp_path/'missing-realizations.json','fr',out)
+    assert not out.exists()

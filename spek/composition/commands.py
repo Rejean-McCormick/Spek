@@ -31,6 +31,8 @@ def preview(root: Path, instance_path: Path, realizations_path: Path, language: 
     out = Path(out).absolute()
     if out.exists() or out.is_symlink() or out == root or out.is_relative_to(root):
         raise ValidationError('Sortie privée : nouveau dossier requis hors du dépôt Spek')
+    if any((parent / '.git').exists() for parent in out.parents):
+        raise ValidationError('Sortie privée interdite dans tout dépôt Git')
     bundle = read_instance(realizations_path)
     resolved = load(root, instance_path)
     values = materialize(resolved, bundle, language)

@@ -78,10 +78,14 @@ def prepare(root: Path, instance_path: Path, requests_dir: Path, language: str,
         locks.append({'template_ref':ref,'sha256':_hash(template_path)})
     fields=[]
     selected_refs=set()
+    request_files=set()
     for leaf in resolved.leaves:
         if not leaf.source_assertion_refs:
             raise ValidationError('Un champ n’est pas ancré dans des assertions sélectionnées')
         filename=Path(leaf.request_ref).name
+        if filename in request_files:
+            raise ValidationError('Une même requête SemantiK est utilisée par plusieurs réalisations')
+        request_files.add(filename)
         reqpath=requests_dir/filename
         if not reqpath.resolve().is_relative_to(requests_dir.resolve()):
             raise ValidationError('Chemin de requête hors du dossier privé')
