@@ -181,6 +181,8 @@ def main(argv=None):
     b.add_argument('--production',action='store_true',help='Block fixtures & unreviewed languages, not an authorization to publish')
     v=sub.add_parser('verify-site');v.add_argument('site');v.add_argument('--require-production',action='store_true')
     i=sub.add_parser('import-semantik');i.add_argument('--input',required=True);i.add_argument('--mapping',required=True);i.add_argument('--out',required=True)
+    lex=sub.add_parser('inspect-lexical-dependency',help='Read-only candidate lexical dependency; never realization/publish')
+    lex.add_argument('--bundle',required=True)
     bridge=sub.add_parser('bridge-import', help='Read-only import of a pinned external selection')
     bridge.add_argument('--adapter',required=True,choices=('konstellation','exchange'))
     bridge.add_argument('--input',required=True,help='Exported Konstellation ResultSet or Spek exchange JSON')
@@ -273,7 +275,10 @@ def main(argv=None):
     rh.add_argument('--format', choices=('text','json'), default='text')
     args=parser.parse_args(argv)
     try:
-        if args.command=='compose-lock':
+        if args.command=='inspect-lexical-dependency':
+            from .lexical_boundary import inspect_lexical_dependency
+            print(json.dumps(inspect_lexical_dependency(Path(args.bundle)),ensure_ascii=False,indent=2))
+        elif args.command=='compose-lock':
             from .composition.editorial_lock import prepare
             dest=Path(args.out)
             if dest.exists() or dest.is_symlink() or dest.resolve().is_relative_to(ROOT.resolve()):
