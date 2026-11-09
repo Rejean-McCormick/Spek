@@ -134,6 +134,9 @@ def section_html(doc: SpekDocument, sec: DocumentSection) -> str:
         body=(_slot_html(sec,'context',doc,'highlight')
               +'<div class="timeline">'+_slot_html(sec,'events',doc)+'</div>'
               +'<div class="grid">'+_slot_html(sec,'interpretation',doc)+_slot_html(sec,'limits',doc)+'</div>')
+    elif l=='portal-page':
+        body=(_slot_html(sec,'lead',doc,'highlight')
+              +_slot_html(sec,'information',doc)+_slot_html(sec,'limits',doc))
     elif l in SPECIALIZED_FAMILIES:
         family = SPECIALIZED_FAMILIES[l]
         names = SPECIALIZED_SLOT_ORDER[family]
@@ -254,6 +257,8 @@ def article_tex(m: Compiled, lang: str) -> str:
             content.extend([featured(sec,'observations'),pair(sec,'interpretation','verification'),sl(sec,'limits')])
         elif sec.layout=='chronology':
             content.extend([featured(sec,'context'),sl(sec,'events'),pair(sec,'interpretation','limits')])
+        elif sec.layout=='portal-page':
+            content.extend([featured(sec,'lead'),sl(sec,'information'),sl(sec,'limits')])
         elif sec.layout in SPECIALIZED_FAMILIES:
             names = SPECIALIZED_SLOT_ORDER[SPECIALIZED_FAMILIES[sec.layout]]
             content.append(featured(sec,names[0]))
@@ -339,7 +344,7 @@ def article_pdf(m: Compiled, lang: str, path: Path) -> None:
         'note':ParagraphStyle('note',fontName='SpekUnicode',fontSize=6.2,leading=9,spaceAfter=3,textColor=muted,wordWrap='CJK'),
         'warning':ParagraphStyle('warning',fontName='SpekUnicodeBold',fontSize=7.5,leading=10,spaceAfter=7,textColor=colors.HexColor('#936108')),
     }
-    educational_packet = any(sec.layout in {'concept-card','learning-path','evidence-comparison','observation-inference','chronology'}
+    educational_packet = any(sec.layout in {'concept-card','learning-path','evidence-comparison','observation-inference','chronology','portal-page'}
                              for sec in docmodel.sections)
     if educational_packet:
         # Dense reference sheets, without shrinking semantic identities away.
@@ -404,6 +409,10 @@ def article_pdf(m: Compiled, lang: str, path: Path) -> None:
         elif sec.layout=='chronology':
             story.extend([box(sec.items('context'),t['context'],pale),Spacer(1,5),
                           box(sec.items('events'),t['events']),paired(sec,'interpretation','limits')])
+        elif sec.layout=='portal-page':
+            story.extend([box(sec.items('lead'),t.get('lead','Lead'),pale),Spacer(1,5),
+                          box(sec.items('information'),t.get('information','Information')),
+                          box(sec.items('limits'),t['limits'])])
         elif sec.layout in SPECIALIZED_FAMILIES:
             for n, slot in enumerate(SPECIALIZED_SLOT_ORDER[SPECIALIZED_FAMILIES[sec.layout]]):
                 if sec.items(slot):
