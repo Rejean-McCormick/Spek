@@ -296,3 +296,7 @@ py -3 -m spek discourse-audit --instance docs\COMPOSITION_RECURSIVE_VNEXT\exempl
 ```
 
 L'atelier graphique propose aussi un audit privé des mouvements rhétoriques dans les options SemantiK. Tous les modèles restent non publiables sans qualification des faits, relations et réalisations et autorisations externes. Consulter [la grammaire du discours](docs/COMPOSITION_RECURSIVE_VNEXT/14_GRAMMAIRE_DU_DISCOURS.md) et [le test d'ancrage réel](docs/COMPOSITION_RECURSIVE_VNEXT/15_SOURCES_REELLES_ET_LIMITES_SEMANTIK.md). Les phrases des exemples sont **fictives et manuelles**.
+
+## Branch 04 functional-chain alignment
+
+See [final-system reader/language boundaries](docs/BRANCH04_EDITORIAL_RUNTIME_ALIGNMENT.md). This is a pinned-snapshot coordination note and does not override owner normative contracts or qualify public publication.

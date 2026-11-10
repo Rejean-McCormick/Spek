@@ -73,3 +73,47 @@ def test_no_request_guessing_from_kristal(tmp_path):
     # A local Kristal is not a valid article or explicit SemantiK mapping.
     with pytest.raises((ValidationError, FileNotFoundError)):
         realize_mapping(tmp_path, tmp_path, architect, runtime)
+
+
+def test_failed_runtime_destroys_private_staging_directory(tmp_path, monkeypatch):
+    """A failed language render must not leave private semantic inputs in /tmp."""
+    article, mapping = make_fixture(tmp_path)
+    architect, runtime = fake_environment(tmp_path)
+    import spek.semantik_execution as module
+    actual_mkdtemp = module.tempfile.mkdtemp
+    created = []
+
+    def capture(*args, **kwargs):
+        result = actual_mkdtemp(*args, **kwargs)
+        created.append(Path(result))
+        return result
+
+    monkeypatch.setattr(module.tempfile, 'mkdtemp', capture)
+    with patch('spek.semantik_execution.subprocess.run',
+               return_value=SimpleNamespace(returncode=2, stdout='', stderr='PGF unavailable')):
+        with pytest.raises(ValidationError, match='Aucune phrase de remplacement créée'):
+            realize_mapping(article, mapping, architect, runtime)
+    assert len(created) == 1
+    assert not created[0].exists()
+
+
+def test_successful_private_preview_remains_available_for_explicit_review(tmp_path):
+    """Successful private output remains accessible to the invoking operator."""
+    article, mapping = make_fixture(tmp_path)
+    architect, runtime = fake_environment(tmp_path)
+    spec = json.loads(mapping.read_text(encoding='utf-8'))
+    source_results = {}
+    for pair in spec['bindings'].values():
+        req = json.loads((mapping.parent / pair['request']).read_text())
+        source_results[req['request_id']] = json.loads((mapping.parent / pair['result']).read_text())
+
+    def render(cmd, **kw):
+        request = json.loads(Path(cmd[-1]).read_text(encoding='utf-8'))
+        return SimpleNamespace(returncode=0, stdout=json.dumps(source_results[request['request_id']]), stderr='')
+
+    with patch('spek.semantik_execution.subprocess.run', side_effect=render):
+        result = realize_mapping(article, mapping, architect, runtime)
+    assert Path(result['private_work_dir']).is_dir()
+    assert Path(result['realizations']).is_file()
+    import shutil
+    shutil.rmtree(result['private_work_dir'])

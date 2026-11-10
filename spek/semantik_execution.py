@@ -114,44 +114,51 @@ def realize_mapping(
     safe_mapping = {'format': TRANSFER_FORMAT, 'language': lang, 'bindings': bindings}
     (bundle / 'mapping.json').write_text(json.dumps(safe_mapping, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
-    for key, (source, result_rel, prepared_request) in sorted(requests.items()):
-        request_rel = Path(bindings[key]['request'])
-        target_request = bundle / request_rel
-        target_result = bundle / result_rel
-        for target in (target_request, target_result):
-            _ensure(target.resolve().is_relative_to(bundle.resolve()), 'sortie hors espace privé')
-            target.parent.mkdir(parents=True, exist_ok=True)
-        # Espace temporaire privé : garder intacte la requête d'origine.
-        # Le texte sera réalisé à partir de la requête CONTRAINTE par Spek.
-        target_request.write_text(json.dumps(prepared_request, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-        cmd = [_python_executable(), '-m', 'semantik_architect.adapters.inbound.cli.main',
-               '--runtime-root', str(runtime_root), 'render', str(target_request)]
-        try:
-            process = subprocess.run(cmd, cwd=architect_root, env=runtime_env, capture_output=True,
-                                     text=True, encoding='utf-8', timeout=45, check=False)
-        except (OSError, subprocess.TimeoutExpired) as exc:
-            raise ValidationError(f'SemantiK indisponible pour « {key} » : {exc}') from exc
-        if process.returncode:
-            # No raw arbitrary stderr/request data in a GUI error; preserve
-            # technical details only in the application's diagnostics elsewhere.
-            raise ValidationError(
-                f'SemantiK ne peut pas réaliser « {key} ». Vérifie le RuntimeSet GF/PGF, '
-                'le profil et les requêtes explicites. Aucune phrase de remplacement créée.'
-            )
-        try:
-            result = json.loads(process.stdout)
-        except (ValueError, TypeError) as exc:
-            raise ValidationError(f'SemantiK a retourné un résultat non JSON pour « {key} »') from exc
-        _ensure(isinstance(result, dict) and result.get('schema_version') == '1.0',
-                f'{key} : résultat SemantiK invalide')
-        verify_result_shape(result, slot_plan['fields'][key], request=prepared_request)
-        # The existing verified transfer checks obligation coverage, language,
-        # RuntimeSet, source references and deterministic result identity.
-        target_result.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    try:
+        for key, (source, result_rel, prepared_request) in sorted(requests.items()):
+            request_rel = Path(bindings[key]['request'])
+            target_request = bundle / request_rel
+            target_result = bundle / result_rel
+            for target in (target_request, target_result):
+                _ensure(target.resolve().is_relative_to(bundle.resolve()), 'sortie hors espace privé')
+                target.parent.mkdir(parents=True, exist_ok=True)
+            # Espace temporaire privé : garder intacte la requête d'origine.
+            # Le texte sera réalisé à partir de la requête CONTRAINTE par Spek.
+            target_request.write_text(json.dumps(prepared_request, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+            cmd = [_python_executable(), '-m', 'semantik_architect.adapters.inbound.cli.main',
+                   '--runtime-root', str(runtime_root), 'render', str(target_request)]
+            try:
+                process = subprocess.run(cmd, cwd=architect_root, env=runtime_env, capture_output=True,
+                                         text=True, encoding='utf-8', timeout=45, check=False)
+            except (OSError, subprocess.TimeoutExpired) as exc:
+                raise ValidationError(f'SemantiK indisponible pour « {key} » : {exc}') from exc
+            if process.returncode:
+                # No raw arbitrary stderr/request data in a GUI error; preserve
+                # technical details only in the application's diagnostics elsewhere.
+                raise ValidationError(
+                    f'SemantiK ne peut pas réaliser « {key} ». Vérifie le RuntimeSet GF/PGF, '
+                    'le profil et les requêtes explicites. Aucune phrase de remplacement créée.'
+                )
+            try:
+                result = json.loads(process.stdout)
+            except (ValueError, TypeError) as exc:
+                raise ValidationError(f'SemantiK a retourné un résultat non JSON pour « {key} »') from exc
+            _ensure(isinstance(result, dict) and result.get('schema_version') == '1.0',
+                    f'{key} : résultat SemantiK invalide')
+            verify_result_shape(result, slot_plan['fields'][key], request=prepared_request)
+            # The existing verified transfer checks obligation coverage, language,
+            # RuntimeSet, source references and deterministic result identity.
+            target_result.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
-    verified = transfer(article_path, bundle / 'mapping.json', private_root / 'resultat',
-                        layouts=layouts, state_snapshot=state_snapshot)
-    return {**verified, 'source': 'semantik_architect_runtime', 'private_work_dir': str(private_root)}
+        verified = transfer(article_path, bundle / 'mapping.json', private_root / 'resultat',
+                            layouts=layouts, state_snapshot=state_snapshot)
+        return {**verified, 'source': 'semantik_architect_runtime', 'private_work_dir': str(private_root)}
+
+    except BaseException:
+        # Failed private previews may contain typed facts and attempted language results.
+        # Do not retain them in a world-readable or forgotten temporary workspace.
+        shutil.rmtree(private_root, ignore_errors=True)
+        raise
 
 
 def main(argv: list[str] | None = None) -> int:
