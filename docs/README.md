@@ -1,3 +1,23 @@
+<!-- SPEK_REGISTRY_FIRST_V050A1 -->
+> **MISE À JOUR OBLIGATOIRE (19-11-2026)** : lire `docs/POINT_ENTREE_REGISTRES_SPEK.md`
+> et `docs/CARTE_REPOS_ET_CHEMINS.md` AVANT toute construction d'article Kristal.
+> Les 19 recettes Arketype, les 127 propositions par Kristal, les cinq revues
+> structurelles et les 62 templates récursifs existent déjà. Le nouveau script
+> `scripts/orchestrer_registre_spek.py` contrôle une liaison explicite entre les
+> deux niveaux et délègue aux moteurs déjà installés. Ce document conserve
+> aussi ci-dessous son contenu historique, qui peut être antérieur à ces acquis.
+> **Aucune proposition n'est une assignation approuvée. Aucun aperçu n'est publiable.**
+
+# Documentation SPEK actuelle
+
+- [Registres et compositions — point d’entrée](POINT_ENTREE_REGISTRES_SPEK.md)
+- [Carte des dépôts et chemins vérifiés](CARTE_REPOS_ET_CHEMINS.md)
+- [Registre de 127 propositions](REGISTRE_IA_127_PROPOSITIONS_FR.md)
+
+---
+
+## Notes historiques conservées
+
 # Documentation Spek
 
 ## Proposition pour la prochaine version

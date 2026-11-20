@@ -1,0 +1,35 @@
+{
+  "format": "spek.private-collection-plan/1.0",
+  "authority": "private_editorial_bindings_not_publication_approval",
+  "collection": {
+    "id": "collection-kristals-pilote",
+    "title": "Collection Kristal — pages documentaires",
+    "description": "Édition privée pour revue humaine, produite par SPEK et SemantiK"
+  },
+  "pages": [
+    {
+      "id": "agriculture-sol",
+      "title": "Agriculture — Le sol",
+      "language": "fr",
+      "instance": "C:/ProjetPrive/agriculture/sol/instance-fr.json",
+      "requests_dir": "C:/ProjetPrive/agriculture/sol/requests-fr",
+      "lock": "C:/ProjetPrive/agriculture/sol/verrou-fr.json",
+      "runtime_id": "REMPLACER_PAR_RUNTIMESET_REEL",
+      "profile": "REMPLACER_PAR_PROFIL_COMPATIBLE",
+      "source_graph": "C:/ProjetPrive/agriculture/sol/semantic-graph.json",
+      "identity_map": "C:/ProjetPrive/agriculture/sol/identity-migration-map.json"
+    },
+    {
+      "id": "agriculture-sol",
+      "title": "Agriculture — Soil",
+      "language": "en",
+      "instance": "C:/ProjetPrive/agriculture/sol/instance-en.json",
+      "requests_dir": "C:/ProjetPrive/agriculture/sol/requests-en",
+      "lock": "C:/ProjetPrive/agriculture/sol/verrou-en.json",
+      "runtime_id": "REMPLACER_PAR_RUNTIMESET_ANGLAIS_REEL",
+      "profile": "REMPLACER_PAR_PROFIL_ANGLAIS_COMPATIBLE",
+      "source_graph": "C:/ProjetPrive/agriculture/sol/semantic-graph.json",
+      "identity_map": "C:/ProjetPrive/agriculture/sol/identity-migration-map.json"
+    }
+  ]
+}
