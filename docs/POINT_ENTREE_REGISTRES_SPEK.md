@@ -1,84 +1,66 @@
-# SPEK — point d'entrée permanent : registres → compositions → pages
+# SPEK — point d'entrée unique permanent « registres → pages »
 
-**Statut : référence d'intégration, version overlay v0.5.0a1, 19 novembre 2026.** Ce fichier évite de redécouvrir à chaque nouvelle intervention la logique de composition déjà construite. Les fichiers JSON d'origine sont l'autorité pour leurs propres propositions; ce guide ne les réécrit pas.
+**Mise à jour 20 novembre 2026, overlay cumulatif v0.8.0a1.** Ne pas recréer le catalogue, les templates ni le moteur HTML. Toute nouvelle conversation commence par `AGENTS.md`, ce document et `PILOTAGE_INTEGRAL_AGRICULTURE_V8.md`, puis `RACCORDEMENT_GFWORDBENCH_AGRICULTURE.md` et `RACCORDEMENT_DIK_AGRICULTURE.md`.
 
-## 1. Sources exactes dans le dépôt SPEK
+## Registres déjà construits — sources exactes
 
-| Fonction | Chemin relatif | Rôle | Autorité |
-|---|---|---|---|
-| 19 recettes Arketype | `template_library/wiki/composition-registry.json` | Registre des combinaisons de **layouts/sections** | Design candidat |
-| Détails des 19 recettes | `template_library/wiki/compositions/*.json` | `sections_in_order`, slots, contraintes par layout | Design candidat |
-| 127 choix individualisés | `template_library/wiki/kristal-ai-proposals.json` | `proposals.<slug>.primary_composition_id`, sections candidates | IA, non approuvée |
-| 5 revues approfondies | `template_library/wiki/kristal-structure-reviews.json` | `reviews.<slug>.ordered_structural_sections`, empreinte source observée | Revue structurelle, non qualifiée |
-| 19 layouts spécialisés | `template_library/wiki/specialized-template-designs.json` et `layouts/*.json` | Contrats typés réalisés par SPEK | Type et présentation, pas faits |
-| Assignations individuelles | `template_library/wiki/kristal-assignments.json` | Validation humaine, état épinglé, assertions sélectionnées | **Vide au contrôle** |
-| 62 templates récursifs | `template_library/rhetorical/templates/*.json` | Mouvements rhétoriques, sous-templates, répétitions | Moteur de présentation |
-| Moteur récursif | `spek/composition/engine.py`, `spek/composition/commands.py` | `resolve`, `compose-check`, `compose-preview` | Exécution locale privée |
-| Registry reader existant | `spek/composition_registry.py` | Contrats des 19 recettes et assignations explicites | Lecture uniquement |
-| GF existant | `scripts/realiser_composition_semantik.py` | Une page SPEK/PGF depuis requêtes et verrou | Privé, non publié |
-| Constructeur existant | `scripts/construire_pages_kristals.py` | Collection HTML/Markdown et manifeste | Privé, non publié |
-| **Overlay (nouveau)** | `scripts/orchestrer_registre_spek.py` | Contrôle de raccordement des deux niveaux puis délégation | Précontrôle, pas renderer |
+| Rôle | Chemin relatif SPEK | Statut |
+|---|---|---|
+| 19 compositions de sections/layouts | `template_library/wiki/composition-registry.json` + `compositions/*.json` | Propositions Arketype |
+| 127 propositions individualisées | `template_library/wiki/kristal-ai-proposals.json` | Non approuvées |
+| 5 revues de source approfondies | `template_library/wiki/kristal-structure-reviews.json` | Lecture de snapshots, non qualifiées |
+| 19 layouts spécialisés et 8 historiques | `template_library/wiki/specialized-template-designs.json` et `layouts/*.json` | Moteurs typés existants |
+| Affectations validées | `template_library/wiki/kristal-assignments.json` | **Vides** |
+| 62 templates rhétoriques | `template_library/rhetorical/templates/*.json` | Récursifs, contrat différent des layouts |
+| Contrôle de raccordement | `scripts/orchestrer_registre_spek.py` | Privé, vérifie plan, instances, empreintes, sources |
+| **Pilote Agriculture v8** | `scripts/piloter_agriculture_registres.py` | Vérifie candidat/source, délègue aux moteurs existants |
+| **Qualification GF Fre** | `scripts/pont_gf_wordbench_agriculture.py` | Délégation précontrôle/sonde au WordBench natif, sans prétention Agriculture |
+| Réalisation GF existante | `scripts/realiser_composition_semantik.py` | Requêtes explicites + provenance, aucun fait inventé |
+| Site HTML/Markdown existant | `scripts/construire_pages_kristals.py` | Site statique privé, manifeste et archive |
 
-**Ne pas confondre** `composition-registry.json` (recettes Arketype/layouts) et les 62 templates `rhetorical` (arbres exécutables). Une association entre ces familles doit être expliquée par le dossier éditorial; elle n'existe pas par simple égalité de noms.
+## Composition Agriculture — ce qui est établi
 
-## 2. Agriculture : la combinaison déjà enregistrée
+1. **Proposition individuelle** : `arketype-modele-multiplexe`; la recette générique contient `entites` (`concept-card`), `couches` (`comparison`), `sources` (`evidence-comparison`), mais la proposition Agriculture ne retient explicitement que `entites` en candidature.
+2. **Revue spécialisée distincte** : six sections `soil`, `crop`, `inputs`, `practices`, `yield`, `cross`, avec layouts `agroecosystem-network`, `agroecosystem-network`, `inputs-practices-matrix`, `practice-interface-map`, `evidence-constraint-matrix`, `relation-network`. Les six sont initialement `NOT_SELECTED`.
+3. **Source d'origine** : `C:\mycode\Kristal\locals\Kristal-Agriculture\.kristal\v8\portable-state.kristal-state.json`, SHA-256 **brut** `ae3cf84ab47a1ea3c710785f5749c7cacd8274d389f767958c7327c6c1a72918`. L'utilisateur a prouvé deux fois l'égalité sur son poste; le contenu exact de 391 assertions a ensuite été fourni et audité.
+4. **Candidature sourcée** : 96 assertions distinctes, réparties 18/14/12/15/15/22 ; aucune n'est sélectionnée officiellement. `decision=pending`, `pages=[]`, `coverage=[]` sont intentionnels. Le slot obligatoire `limits` de chaque layout n'est pas couvert par une unité autorisée; les warnings techniques ne sont pas des assertions scientifiques réalisables.
+5. **Autre pilote** : page source-littérale v11.1 (408 assertions) et un glossaire de quatre sections. Elle est HTML valide, mais ne prouve PAS le rendu riche Agriculture v8 ni GF et ne remplace pas le plan enregistré.
 
-- Identité canonique : `agriculture`.
-- Composition principale : `arketype-modele-multiplexe` (`template_library/wiki/compositions/modele-multiplexe.json`).
-- Recette historique : `entites` (`concept-card`), `couches` (`comparison`), `sources` (`evidence-comparison`). La proposition individualisée Agriculture ne retient actuellement que la première section parmi ses `ordered_sections` candidates : ne pas prétendre que les trois sont assignées.
-- Revue approfondie, distincte de la recette générique : `soil` et `crop` (`agroecosystem-network`), `inputs` (`inputs-practices-matrix`), `practices` (`practice-interface-map`), `yield` (`evidence-constraint-matrix`), `cross` (`relation-network`).
-- Le registre de revue mentionne **391 occurrences d'assertions en v8** et une empreinte brute du fichier portable étudié. La page source-littérale ultérieure provient d'un **autre graphe, v11.1, 408 assertions** : ne jamais présumer qu'une section, un ID ou une relation se transpose telle quelle. La revue/migration v11.1 n'est pas faite.
-- Le pilote récursif à quatre sections utilisant surtout `wiki.domain-primer-source-bound`, `wiki.domain-section`, `rhetorical.definition` est une **démonstration locale non-GF**. C'est une composition valide, mais **pas** l'exécution des plans de registre Agriculture.
-- Les cinq revues détaillées sont : AI, Accounting, Aerospace, Aging, Agriculture. Les 122 autres propositions nécessitent les données sources réelles pour être qualifiées.
+## Chaîne de fabrication sans duplication
 
-## 3. Commandes Windows PowerShell 7
+`Kristal locals v8 exact → registres AI (proposition + revue) → sélection éditoriale contrôlée → liaison explicite section/layout/feuilles → SemantiK Architect/GF (RuntimeSet réellement vérifié) → moteur SPEK récursif et layouts typés → collection HTML/Markdown privée → revue indépendante → Publisher avec autorisations C1/C2/C3/C4`.
 
-Depuis le dépôt SPEK installé :
+**Attention :** les 19 layouts typés et les 62 templates récursifs sont deux contrats distincts. L'orchestrateur ne transforme pas magiquement un layout `agroecosystem-network` en instance `rhetorical.*`. La correspondance doit être établie, vérifiée et justifiée; le code refuse les feuilles ou assertions manquantes.
 
-```powershell
-$spek='C:\mycode\Spek_Semantic-publishing\Spek'
-$ctl=Join-Path $spek 'scripts\orchestrer_registre_spek.py'
+## Commandes Windows — une seule entrée
 
-# Vérification immédiate des choix enregistrés (ne modifie rien)
-py -3.12 $ctl --spek-root $spek inspect --kristal agriculture
-
-# Copie de structure NON REMPLIE dans un fichier privé neuf, hors Git
-$binding=Join-Path $HOME 'Downloads\spek-agriculture-registre-liaison-privee.json'
-py -3.12 $ctl --spek-root $spek scaffold --kristal agriculture --basis deep_review --out $binding
-```
-
-Le fichier contient les six sections exactes de la revue approfondie, mais **aucun chemin de source activé, aucune assertion sélectionnée, aucune page et aucune combinaison récursive validée**. Les renseigner explicitement après revue. `--basis recipe` reprend au contraire les sections **réellement proposées pour ce Kristal** dans les 127 fiches (pour Agriculture : `entites`, et non les trois sections de la recette générique); ne pas fusionner silencieusement les deux variantes.
-
-Le contrat d'une page dans `pages` inclut `instance_sha256` (empreinte SHA-256 des **octets de l'instance SPEK**), en plus des `template_refs`. Le moteur vérifie les noms de templates, mais l'empreinte épingle aussi leur **combinaison exacte, leur ordre et leurs bindings**, qui ne doivent pas changer après revue. Le plan GF doit comprendre un `source_graph` explicite égal à `source_state.file` du dossier de liaison. La vérification du plan, des verrous et des résultats reste assurée par les **moteurs existants**.
-
-Une fois la source et les demandes documentaires réellement présentes :
+Depuis n'importe quel terminal avec Python 3.12 :
 
 ```powershell
-$plan='C:\CHEMIN_PRIVE_VERIFIE\plan-collection-gf.json'
-py -3.12 $ctl --spek-root $spek check --binding $binding --plan $plan
-
-# Le même constructeur SPEK existant est invoqué UNIQUEMENT si check réussit.
-$sa='C:\mycode\SemantiK_Architect\SemantiK_Architect'
-$gf='C:\mycode\Grammatical-Framework\gf-3.12-windows\gf.exe'
-py -3.12 $ctl --spek-root $spek build `
-  --binding $binding --plan $plan --architect $sa `
-  --runtime-root "$sa\runtime" --gf-exe $gf `
-  --out "$HOME\Downloads\AGRICULTURE_GF_REGISTRE_PRIVE"
+$spek = 'C:\mycode\Spek_Semantic-publishing\Spek'
+$ctl = Join-Path $spek 'scripts\piloter_agriculture_registres.py'
+py -3.12 $ctl --spek-root $spek doctor
+# HTML privé d'inspection structurelle PRODUIT PAR SPEK (sans GF)
+py -3.12 $ctl --spek-root $spek preview --out "$HOME\Downloads\Agriculture-structure-$(Get-Date -Format yyyyMMdd-HHmmss)"
 ```
 
-Le dossier de liaison utilise `spek.registry-first-explicit-bridge/1.0`. Remplir :
+Le contrôle `doctor` doit signaler `SOURCE_AND_REGISTRY_CANDIDATES_VERIFIED_NOT_BUILDABLE` et six `limits` manquants, tant qu'aucune revue éditoriale/PGF Agriculture n'a été fournie. Ce statut est un **résultat attendu, pas une réussite de publication**.
 
-- `source_state.file` et son SHA-256 **des octets exacts**. Pour `basis=deep_review`, il doit correspondre au snapshot examiné en v8 (sinon **refus**, nouvelle revue requise).
-- `pages` : identité/locale de chaque page du plan GF, chemin d'instance identique au plan, **empreinte SHA-256 de l’instance**, et ensemble exact de références des templates récursifs réellement résolus.
-- `sections` : décision `include`/`omit` pour **chaque** section dans l'ordre du registre, justification d'omission ou bien IDs d'assertion, chemins sémantiques et `coverage` explicite (`page_key`, `realization_keys`). L'union des assertions par section doit être égale aux références des feuilles assignées; chaque feuille doit appartenir à une seule section.
-- `status = EXPLICIT_PRIVATE_SELECTION_PENDING_INDEPENDENT_REVIEW`, `publication_authorized = false`. Cela permet uniquement **une tentative de réalisation privée**; ce n'est pas une décision éditoriale finale.
+Quand une vraie liaison complète et le plan GF existent (ils ne sont PAS inventés par cet overlay), `check`, puis `build`, puis `package` délèguent aux modules déjà installés. Voir le guide du pilote pour les commandes exactes.
 
-`check` ne remplace pas la validation sémantique indépendante. Le constructeur historique vérifie ses verrous et paires requête/résultat; le GF/PGF doit ensuite correspondre aux capacités exigées par le domaine, et l'article complet doit être revu avant Publisher.
+Les docs historiques conservent parfois des instantanés antérieurs. **Ce point d'entrée prévaut comme résumé d'intégration**, mais les contrats et versions de chaque outil restent autoritatifs pour l'exécution.
 
-## 4. Interopérabilité : aucune duplication
+## Liaison WordBench disponible (v0.7)
 
-**Séquence attendue :** registre → sélection éditoriale explicite → contrôle overlay → `spek/composition/engine.py` → `scripts/realiser_composition_semantik.py` → SemantiK Architect / GF + RuntimeSet qualifié via SRO → `scripts/construire_pages_kristals.py` → vérification de site → revue humaine et autorisations C1/C2/C3/C4 → Publisher.
+Le code contrôle les 15 scénarios français déjà présents dans WordBench sans doubler son moteur, et crée sur demande un inventaire privé **des 96 obligations de mapping Agriculture** avec prédicat, sujet, objet, preuve, section et slot. Aucun `CommunicationRequest`, constructeur GF, glossaire ou qualification n’est inventé. Commandes sous `docs/RACCORDEMENT_GFWORDBENCH_AGRICULTURE.md`. Les 15 scénarios Defluens Fre, même exécutés, ne valent pas une compilation PGF de domaine Agriculture.
 
-La commande historique `construire_pages_kristals.py build` reste accessible pour la compatibilité des pilotes privés déjà réalisés; elle **ne vérifie pas le registre**. Pour un nouveau document Kristal, appeler `orchestrer_registre_spek.py build` à sa place. Cet overlay n'altère ni le canon, ni les assignments d'autorité, ni le HTML du moteur.
+## diK — raccordement lexical natif (v0.8)
 
-**Ce que la recette ne prouve pas :** aucune réalisation de domaine Agriculture attestée par GF, aucune fidélité sémantique certifiée, aucune autorisation de publier, aucune activation Kristal.
+Ne pas demander à l'utilisateur de redécouvrir diK ni de transmettre de nouveau son archive.
+Les fichiers du snapshot réel existent dans `src/dik/gf_handoff.py`,
+`src/dik/semantik_handoff.py` et `docs/docs/30_SEMANTIK_GF_HANDOFF_V09.md`.
+L'exemple français passe les six commandes natives sur l'échantillon diK,
+mais le transfert reste `CANDIDATE_ONLY` sans mapping GF ou approbation.
+Exécuter `doctor`, puis si utile `probe-dik`; le rapport exact de besoins
+lexicaux Agriculture sort de `lexical-needs`.
+Voir `docs/RACCORDEMENT_DIK_AGRICULTURE.md`.

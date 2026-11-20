@@ -1,38 +1,36 @@
-# Carte des dépôts utiles à SPEK — chemins et niveaux de preuve
+# Carte stable des dépôts utiles à SPEK — état au 20 novembre 2026
 
-**Révision : 19 novembre 2026.** Cette carte sert d'index opérationnel, non de constat d'accès distant. Un chemin cité dans un guide n'est pas nécessairement présent sur le PC. Les connecteurs GitHub et le conteneur de travail ne peuvent pas exécuter des commandes dans un dossier local Windows sans résultat fourni par l'opérateur.
-
-| Rôle | Chemin Windows | Justification / niveau de preuve |
+| Projet | Chemin local Windows | Confirmation |
 |---|---|---|
-| SPEK, code et template manager | `C:\mycode\Spek_Semantic-publishing\Spek` | **Confirmé** par `cd` et les journaux pytest utilisateur (26 tests passés). Dépôt distant lu : `Rejean-McCormick/Spek`. |
-| SemantiK Architect, realization CLI | `C:\mycode\SemantiK_Architect\SemantiK_Architect` | **Confirmé** dans l'exécution réelle `render` avec GF. |
-| Grammatical Framework, CLI Windows | `C:\mycode\Grammatical-Framework\gf-3.12-windows\gf.exe` | **Confirmé** par l'exécution du `CommunicationResult` français. |
-| SemantiK Runtime Orchestrator | `C:\mycode\SemantiK_Architect\SemantiK_Runtime_Orchestrator` | **Chemin rapporté** dans le contexte technique antérieur; pas revérifié sur ce poste dans cette recette. |
-| Konstellation | `C:\mycode\Konstellation\Konstellation` | **Confirmé** par le prompt PowerShell fourni; **branche distincte**, ne pas la modifier ici. |
-| Kristal `locals` | `C:\mycode\Kristal\locals` | **Chemin cité dans les anciens guides SPEK**, pas confirmé comme chemin courant. Canon à déterminer localement, jamais inventé. |
-| Kristal public (lecture) | chemin local **inconnu** | Dépôt distant **consulté** : `Rejean-McCormick/kristal-public` ; snapshot local sur serveur analysé. Ne pas inférer son emplacement Windows. |
-| Kristal-Manager / C1/C2/C3 | chemin local **inconnu** | Acteur amont pour les décisions, les sources et les autorisations; aucune modification par cet overlay. |
-| Arketype | chemin local **inconnu** | Les 19 recettes sont déjà vendues/versionnées **dans SPEK** ; inutile de dupliquer le moteur. |
-| Publisher / EncyK Publication Orchestrator | chemin local **inconnu** | L'overlay ne déploie rien; exigences de publication indépendantes. |
-| GF WordBench / GF Audit | chemins locaux **inconnus** | Conformance/compilation/audit amont; ne jamais traiter un PGF trouvé comme automatiquement publié. |
+| SPEK | `C:\mycode\Spek_Semantic-publishing\Spek` | Utilisateur, 26 tests cumulés et 17 tests registre passés |
+| Kristal Agriculture v8 | `C:\mycode\Kristal\locals\Kristal-Agriculture\.kristal\v8\portable-state.kristal-state.json` | **Utilisateur : SHA-256 exact confirmé 2 fois** ; source de 391 assertions communiquée |
+| SemantiK Architect | `C:\mycode\SemantiK_Architect\SemantiK_Architect` | GF réel exécuté avec ce dépôt pour Konstellation FR |
+| GF CLI | `C:\mycode\Grammatical-Framework\gf-3.12-windows\gf.exe` | GF réel Konstellation FR exécuté |
+| SemantiK Runtime Orchestrator | `C:\mycode\SemantiK_Architect\SemantiK_Runtime_Orchestrator` | Chemin rapporté ; profils Konstellation inspectés, statut de publication non acquis |
+| Konstellation | `C:\mycode\Konstellation\Konstellation` | Prompt PowerShell confirmé ; ne pas toucher ici |
+| Kristal-Manager | **À déterminer seulement si action Manager nécessaire** | Amont des liaisons/qualification |
+| Arketype | Chemin local non nécessaire à ce pilote | Ses 19 recettes sont déjà versionnées dans SPEK |
+| Publisher / EncyK Publication Orchestrator | **Chemin local non confirmé** | Admission et publication séparées |
+| **GF WordBench** | `C:\mycode\Grammatical-Framework\GF_Wordbench` | Racine confirmée par index + snapshot complet; pilote natif Fre 15 scénarios, gold non approuvé |
+| **GF RGL** | `C:\mycode\Grammatical-Framework\gf-rgl` | Index local fourni, sources françaises sous `src/french/` ; pas un profil Agriculture |
+| GF Audit | Chemin local non confirmé | Ne pas deviner ; outil distinct |
 
-## Interfaces de code déjà existantes
+Les dépôts GitHub de lecture utilisés précédemment incluent `Rejean-McCormick/Spek` et `Rejean-McCormick/kristal-public`. Ils ne donnent **pas** d'accès aux fichiers Windows de l'utilisateur. Ne pas deviner les chemins manquants, et ne pas transférer des données canon ou privées dans des dépôts publics.
 
-- `spek/composition_registry.py`: validation des 19 recettes et affectations explicites (lecture seulement).
-- `spek/composition/engine.py`, `spek/composition/commands.py`: templates récursifs et rendu HTML/Markdown, déjà testés sur Windows.
-- `scripts/realiser_composition_semantik.py`: appelle le CLI officiel Architect/PGF; verrous et paires vérifiés.
-- `scripts/construire_pages_kristals.py`: assemble le site statique privé et son manifeste.
-- `scripts/orchestrer_registre_spek.py`: **seul nouvel adaptateur de contrôle**, ne contient aucun moteur de templates/rendu/publication.
+## Anti-redécouverte
 
-## Règle anti-redécouverte
+La recherche des registres est terminée. Lire `AGENTS.md`, `docs/POINT_ENTREE_REGISTRES_SPEK.md`, puis la proposition `proposals.agriculture` et la revue `reviews.agriculture`. Le nouveau pilote `scripts/piloter_agriculture_registres.py doctor` vérifie le même inventaire. **Ne pas confondre source v8 et graphe v11.1, ni interpréter un `validated` du fichier comme approbation de publication.**
 
-Avant de créer un outil, une composition ou un rapprochement nouveau, ouvrir dans cet ordre :
+## Contrôle GF officiel depuis SPEK v0.7
 
-1. [`POINT_ENTREE_REGISTRES_SPEK.md`](POINT_ENTREE_REGISTRES_SPEK.md)
-2. `template_library/wiki/kristal-ai-proposals.json` à la clé exacte du Kristal
-3. `template_library/wiki/kristal-structure-reviews.json` à la clé exacte si elle existe
-4. `template_library/wiki/composition-registry.json` et la recette citée
-5. `template_library/wiki/kristal-assignments.json` pour vérifier si l'affectation est approuvée
-6. `template_library/rhetorical/templates/` et la véritable instance de composition avant toute modification de code
+`py -3.12 scripts\piloter_agriculture_registres.py doctor` délègue le précontrôle des 15 scénarios Fre à `python -m gf_wordbench.practical.pilot check --language Fre` via `PYTHONPATH` explicite et sans écrire dans WordBench. Voir `docs/RACCORDEMENT_GFWORDBENCH_AGRICULTURE.md`. Aucune exécution GF réelle Agriculture n'est démontrée par ce contrôle.
 
-Aucune action réseau, Git, canon, transfert de données privées ou Publisher n'est incluse dans le correctif.
+## diK (snapshot de code inspecté le 20 novembre 2026)
+
+- **diK** : documentation interne : `C:\mycode\diK\diK`, chemin local **non confirmé** ;
+  détectable via `--dik-root` sans question préalable si le dossier existe.
+- Contrat lexical réel : `src/dik/gf_handoff.py`, `src/dik/semantik_handoff.py`,
+  `docs/docs/30_SEMANTIK_GF_HANDOFF_V09.md` ; `use_for=knowledge`, pas de RuntimeSet.
+- **GF WordBench** est responsable des sondes/compilations, pas diK.
+- **SemantiK Architect** décide explicitement de l'opération et du lexique de réalisation.
+- SPEK ne revendique aucune identité lexicale approuvée à partir d'une similarité de mot.
