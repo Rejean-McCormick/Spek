@@ -1,3 +1,9 @@
+## 2026-11-23 — Interface inter-dépôts diK / Wikidata (candidat)
+
+- Références KQ/KP namespace-scoped, crosswalk Q/P, 13 langues cibles, lecture seule.
+- Nouveau contrat documentaire, précontrôles ou index dérivé; aucune activation ni promotion.
+- Tests de garde-fous et provenance de snapshot ; compatibilité historique conservée.
+
 ## 2026-11-03 — Contrats discursifs pour les 62 templates
 
 - Modèles de mouvements rhétoriques, groupes de paragraphes et DAG des relations déclarées, non vérifiées sémantiquement.

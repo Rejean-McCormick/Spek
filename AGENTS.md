@@ -46,3 +46,7 @@ KQ/KP/KA et ne crée ni `.gf`, ni RuntimeSet. `doctor`, `probe-dik` et
 `lexical-needs` sont décrits dans `docs/RACCORDEMENT_DIK_AGRICULTURE.md`.
 L'export diK `semantik.knowledge.json` est *knowledge-only* et ne constitue
 PAS un lexique de réalisation ou une autorisation GF.
+
+## Interface fédérée diK V5.9 — règle additive candidate
+
+Ne jamais traiter `dik.federated-semantic-registry/0.1-candidate` comme une source d’autorité canonique ou une permission de publier. Toute identité locale exige `namespace_id+KQ/KP`; un Q/P Wikidata n’est qu’un alignement externe revu. Le précontrôle vérifie uniquement l’intégrité. Consulter `docs/DIK_FEDERATED_REGISTRY_BOUNDARY.md`. Les contraintes propriétaire existantes prévalent.

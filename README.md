@@ -310,3 +310,7 @@ L'atelier graphique propose aussi un audit privé des mouvements rhétoriques da
 ## Branch 04 functional-chain alignment
 
 See [final-system reader/language boundaries](docs/BRANCH04_EDITORIAL_RUNTIME_ALIGNMENT.md). This is a pinned-snapshot coordination note and does not override owner normative contracts or qualify public publication.
+
+## Raccordement fédéré diK — candidat (23 novembre 2026)
+
+Voir [`docs/DIK_FEDERATED_REGISTRY_BOUNDARY.md`](docs/DIK_FEDERATED_REGISTRY_BOUNDARY.md). Cette mise à jour fournit un précontrôle ou un index dérivé en lecture seule; aucune admission, migration ou publication n’est implicite.
