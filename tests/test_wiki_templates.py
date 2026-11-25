@@ -71,7 +71,7 @@ class WikiTemplatesTests(unittest.TestCase):
     def test_english_realizations(self):
         with tempfile.TemporaryDirectory() as td:
             self.demo(Path(td),language='en')
-            self.assertIn('DEMONSTRATION — NOT PUBLISHABLE',(Path(td)/'wiki/Kristal-demo-test.md').read_text())
+            self.assertIn('DEMONSTRATION — NOT PUBLISHABLE',(Path(td)/'wiki/Kristal-demo-test.md').read_text(encoding='utf-8'))
 
     def test_wrong_layout_for_archetype_is_blocked(self):
         with tempfile.TemporaryDirectory() as td:

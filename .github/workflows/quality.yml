@@ -44,9 +44,9 @@ jobs:
         run: python -m spek verify-site preview-external
 
       - name: Test curated Ekole education import
-        run: python -m spek import-educational --adapter ekole --input examples/education/ekole-curated-preview.json --out-dir education-ekole
+        run: python -m spek import-educational --adapter ekole --input examples/education/ekole-curated-preview.json --out-dir ci-education-ekole
       - name: Compile educational preview (never published)
-        run: python -m spek build --source education-ekole/article.json --realizations education-ekole/realizations.json --out preview-education --formats html,pdf,tex
+        run: python -m spek build --source ci-education-ekole/article.json --realizations ci-education-ekole/realizations.json --out preview-education --formats html,pdf,tex
       - name: Verify educational preview
         run: python -m spek verify-site preview-education
       - name: Test Kompose preauthorized public excerpt import

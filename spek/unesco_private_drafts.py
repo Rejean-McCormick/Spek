@@ -128,7 +128,7 @@ def write_private(handoff_path:Path,phrase_path:Path,out:Path):
     if not out.parent.is_dir():raise DraftError('Output parent must exist')
     stage=Path(tempfile.mkdtemp(prefix='.'+out.name+'-spek-',dir=out.parent))
     try:
-        for name,body in pages.items(): (stage/name).write_text(body,encoding='utf8')
+        for name,body in pages.items(): (stage/name).write_bytes(body.encode('utf8'))
         (stage/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,sort_keys=True,indent=2)+'\n',encoding='utf8')
         os.rename(stage,out)
     finally:

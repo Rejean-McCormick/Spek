@@ -56,7 +56,7 @@ class FileSecurity(unittest.TestCase):
             root = Path(t)
             repo = root / "spek"; repo.mkdir()
             target = root / "private" / "edition-1"
-            self.assertEqual(RUNNER._outside_git(target, repo), target)
+            self.assertEqual(RUNNER._outside_git(target, repo), target.resolve())
             self.assertTrue(target.parent.is_dir())
             self.assertFalse(target.exists())
 
