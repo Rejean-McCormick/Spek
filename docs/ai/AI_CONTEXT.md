@@ -42,3 +42,7 @@ Composition éditoriale et publication multilingue avec templates récursifs et 
 ## État de cette fiche
 
 `DOCUMENTATION_REDACTIONNELLE_A_REVOIR` : elle facilite le démarrage d'un agent, mais **ne prouve aucun état d'intégration, publication, conformité ni maturité**.
+
+## Multilingual alignment — 2026-11-26
+
+Read the [dated owner-context addendum](MULTILINGUAL_ALIGNMENT_2026-11-26.md). It records the observed scope, authority and pending gates; it does not replace owner contracts or certify current code.
