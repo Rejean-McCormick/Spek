@@ -61,11 +61,11 @@ sans texte fictif ni publication.
 
 ## Try it locally
 
-Requirements: **Python 3.10+**. No external service is called while compiling. PDFs use ReportLab and installed Unicode TrueType fonts (`requirements.txt`); HTML and TeX can be generated with Python's standard library. Regression tests additionally use `pypdf`.
+Requirements: **Python 3.10+**. No external service is called while compiling. PDFs use ReportLab and installed Unicode TrueType fonts (`requirements.txt`); HTML and TeX can be generated with Python's standard library. Regression tests additionally use `pypdf`, `pytest` and `beautifulsoup4`.
 
 ```bash
-python -m pip install -r requirements.txt
-python -m unittest discover -s tests -v
+python -m pip install -e ".[test]"
+python -m pytest -q tests
 python -m spek check
 python -m spek build --out dist --formats html,pdf,tex
 python -m spek verify-site dist

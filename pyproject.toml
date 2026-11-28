@@ -17,7 +17,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-test = ["pypdf>=5,<7"]
+test = ["pypdf>=5,<7", "pytest", "beautifulsoup4"]
 
 [project.scripts]
 spek = "spek.cli:main"
